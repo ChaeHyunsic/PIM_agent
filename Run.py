@@ -2,11 +2,18 @@ import os
 import shutil
 import psutil
 
+from RunData import *
 
-def checkRun():
+
+def initCheck():
+    if not(checkDir()):
+        makeDir()
+
+
+def run():
     check = 0
-    srcPath = getHomePath()
-    dstPath = "C:/Users/samsung/Desktop/2/"
+    srcPath = getSrcPath()
+    dstPath = getDstPath()
 
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
@@ -28,19 +35,7 @@ def fileMove(srcPath, dstPath):
             shutil.move(srcPath + filename, dstPath + filename)
 
 
-def getControlDataNames():
-    controlDataNames = ["History", "DownloadMetadata",
-                        "Extension Cookies", "Bookmarks", "Login Data", "DownloadMetadata"]
-
-    return controlDataNames
-
-
-def getHomePath():
-    homePath = os.path.expanduser(
-        '~/AppData/Local/Google/Chrome/User Data/Default/').replace('\\', '/')
-
-    return homePath
-
+initCheck()
 
 while(True):
-    checkRun()
+    run()
