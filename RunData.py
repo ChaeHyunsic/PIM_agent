@@ -8,12 +8,12 @@ def getControlDataNames():
     controlDataNames = ["/Bookmarks", "/Bookmarks.bak", "/DownloadMetadata", "/Extension Cookies", "/Extension Cookies-journal", 
                         "/History", "/History-journal", "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", 
                         "/Shortcuts", "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Visited Links", "/Web Data", "/Web Data-journal",
-                        "/Local State", "/IndexedDB", "/Session Storage", "/Sessions", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage"]
+                        "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage"]
 
     return controlDataNames
 
 def getSrcPath():
-    homePath = os.path.expanduser('~/AppData/Local/Google/Chrome/User Data/Default/').replace('\\', '/')
+    homePath = os.path.expanduser('~/AppData/Local/Google/Chrome/User Data/Default').replace('\\', '/')
 
     return homePath
 
