@@ -31,7 +31,7 @@ def fileMove(srcPath, dstPath):
     filenames = getControlDataNames()
 
     for filename in filenames:
-        if(os.path.isfile(srcPath + filename)):
+        if(os.path.isfile(srcPath + filename) or os.path.isdir(srcPath + filename)):
             shutil.move(srcPath + filename, dstPath + filename)
 
 
