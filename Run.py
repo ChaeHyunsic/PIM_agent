@@ -12,7 +12,7 @@ def initCheck():
         makeDir()
 
 
-def run():
+def run(beginTimer):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -53,11 +53,3 @@ def fileMove(srcPath, dstPath):
             if(os.path.exists(dstPath + filename)):
                 shutil.rmtree(dstPath + filename)
             shutil.move(srcPath + filename, dstPath + filename)
-
-
-initCheck()
-
-beginTimer = time.time()
-
-while(True):
-    run()
