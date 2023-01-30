@@ -4,12 +4,32 @@ import time
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import *
 
 from Run import *
 
 init_form_class = uic.loadUiType("initGUI.ui")[0]
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
+
+class Thread(QThread):
+    
+    #초기화 메서드 구현    
+    def __init__(self):
+        super().__init__()    
+        self.breakPoint = False
+
+    def run(self):
+            initCheck()
+            beginTimer = time.time()
+
+            while(not self.breakPoint):
+                run(beginTimer)
+        #쓰레드로 동작시킬 함수 내용 구현 
+    
+    def stop(self):
+        self.breakPoint = True
+        self.quit()
+        self.wait(3000)
 
 
 class LoginClass(QDialog, login_form_class):
@@ -45,14 +65,6 @@ class LoginClass(QDialog, login_form_class):
             self.passEdit.setText("")
             self.show()
 
-            # 49 ~ 54 line thread 필요
-            initCheck()
-
-            beginTimer = time.time()
-
-            while(not mainWindow.breakPoint):
-                run(beginTimer)
-
 
 class InitClass(QDialog, init_form_class):
 
@@ -70,8 +82,11 @@ class InitClass(QDialog, init_form_class):
 
         self.logoutBtn.clicked.connect(self.logout)
 
+        self.daemonThread = Thread() 
+        self.daemonThread.start()
+
     def logout(self):
-        self.breakPoint = True
+        self.daemonThread.stop()
         self.close()
 
 
