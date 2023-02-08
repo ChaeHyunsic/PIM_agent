@@ -63,7 +63,8 @@ class LoginClass(QDialog, login_form_class):
         self.password = self.pwdEdit.text()
 
         if not(self.idEdit.text() and self.pwdEdit.text()):
-            QMessageBox.setStyleSheet(self,'QMessageBox {color: rgb(120, 120, 120)}')
+            QMessageBox.setStyleSheet(
+                self, 'QMessageBox {color: rgb(120, 120, 120)}')
             QMessageBox.information(
                 self, 'Message', "아이디 또는 비밀번호를 입력해 주세요.", QMessageBox.Yes)
             return
@@ -78,7 +79,8 @@ class LoginClass(QDialog, login_form_class):
             self.pwdEdit.setText("")
             self.show()
         else:
-            QMessageBox.setStyleSheet(self,'QMessageBox {color: rgb(120, 120, 120)}')
+            QMessageBox.setStyleSheet(
+                self, 'QMessageBox {color: rgb(120, 120, 120)}')
             QMessageBox.information(
                 self, 'Message', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             return
