@@ -8,6 +8,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import *
 
 from Run import *
+from DB_setting import *
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
 run_form_class = uic.loadUiType("runGUI.ui")[0]
@@ -47,6 +48,7 @@ class LoginClass(QDialog, login_form_class):
 
         self.id = ""
         self.password = ""
+        self.nickname = ""
 
         self.idEdit: QLineEdit
         self.pwdEdit: QLineEdit
@@ -69,7 +71,8 @@ class LoginClass(QDialog, login_form_class):
                 self, 'Message', "아이디 또는 비밀번호를 입력해 주세요.", QMessageBox.Yes)
             return
 
-        if(self.id == 'test' and self.password == 'test'):
+        checkLogin, self.nickname = getLoginData(self.id, self.password)
+        if(checkLogin):
             self.hide()
 
             mainWindow = RunClass(self)
@@ -105,11 +108,10 @@ class RunClass(QDialog, run_form_class):
         self.setupUi(self)
         self.titleLabel: QLabel
         self.logoutBtn: QPushButton
-        self.nickname = "test"
 
         self.setWindowIcon(QIcon("windowIcon.png"))
 
-        self.titleLabel.setText(self.nickname + " 님")
+        self.titleLabel.setText("" + " 님")
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
         self.logoutBtn.clicked.connect(self.logout)
