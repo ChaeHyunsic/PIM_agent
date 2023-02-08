@@ -76,6 +76,7 @@ class LoginClass(QDialog, login_form_class):
             self.hide()
 
             mainWindow = RunClass(self)
+            mainWindow.setNickname(self.nickname)
             mainWindow.exec()
 
             self.idEdit.setText("")
@@ -111,7 +112,6 @@ class RunClass(QDialog, run_form_class):
 
         self.setWindowIcon(QIcon("windowIcon.png"))
 
-        self.titleLabel.setText("" + " 님")
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
         self.logoutBtn.clicked.connect(self.logout)
@@ -119,6 +119,9 @@ class RunClass(QDialog, run_form_class):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
         self.daemonThread = Thread()
         self.daemonThread.start()
+    
+    def setNickname(self, nickname):
+        self.titleLabel.setText(nickname + " 님")
 
     def logout(self):
         self.daemonThread.stop()
