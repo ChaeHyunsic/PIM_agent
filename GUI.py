@@ -154,7 +154,7 @@ class JoinClass(QDialog, join_form_class):
             return True
 
     def nicknameValid(self, nickname):
-        if re.search('^(?!.*\s)(?=.*[a-zA-Z0-9]).{0,16}$', nickname) is None:
+        if re.search('^(?!.*\s)(?=.*[a-zA-Z0-9ㄱ-ㅎ가-힣]).{0,16}$', nickname) is None:
             return False
         else:
             return True
@@ -181,6 +181,12 @@ class JoinClass(QDialog, join_form_class):
         elif not nicknameValidation:
             QMessageBox.information(
                 self, 'Message', "입력한 닉네임이 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
+        elif not checkIDUnique(self.idEdit.text()):
+            QMessageBox.information(
+                self, 'Message', "입력한 ID가 이미 존재합니다.", QMessageBox.Yes)
+        elif not checkNicknameUnique(self.nicknameEdit.text()):
+            QMessageBox.information(
+                self, 'Message', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
         else:
             setMembership(self.idEdit.text(), self.pwdEdit.text(), self.nicknameEdit.text())
 
