@@ -182,10 +182,7 @@ class JoinClass(QDialog, join_form_class):
             QMessageBox.information(
                 self, 'Message', "입력한 닉네임이 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
         else:
-            data = {'username': self.nicknameEdit.text(),
-                    'id': self.idEdit.text(),
-                    'password': self.pwdEdit.text()
-                    }
+            setMembership(self.idEdit.text(), self.pwdEdit.text(), self.nicknameEdit.text())
 
             self.close()
 
@@ -213,7 +210,15 @@ class FindClass(QDialog, find_form_class):
             QMessageBox.information(
                 self, 'Message', "닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
         else:
-            # 여기다가 데이터베이스 조회 기능 추가
+            result, resultID = getID(self.findIdFromNicknameEdit.text())
+
+            if(result):
+                QMessageBox.information(
+                self, 'Message', "해당 닉네임으로 연결된 ID는 " + resultID + " 입니다.", QMessageBox.Yes)
+            else:
+                QMessageBox.information(
+                self, 'Message', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
+            
             self.close()
 
     def findPWFunc(self):
@@ -223,7 +228,14 @@ class FindClass(QDialog, find_form_class):
             QMessageBox.information(
                 self, 'Message', "ID나 닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
         else:
-            # 여기다가 데이터베이스 조회 기능 추가
+            result, resultPW = getPW(self.findPwFromIDEdit.text(), self.findPwFromNicknameEdit.text())
+
+            if(result):
+                QMessageBox.information(
+                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 " + resultPW + " 입니다.", QMessageBox.Yes)
+            else:
+                QMessageBox.information(
+                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
 
 
