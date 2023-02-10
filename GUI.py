@@ -7,8 +7,8 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import *
-from DB_setting import *
+from Run import initCheck, run
+from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
 run_form_class = uic.loadUiType("runGUI.ui")[0]
@@ -19,16 +19,17 @@ find_form_class = uic.loadUiType("findGUI.ui")[0]
 class Thread(QThread):
 
     # 초기화 메서드 구현
-    def __init__(self):
+    def __init__(self, nickname):
         super().__init__()
         self.breakPoint = False
+        self.nickname = nickname
 
     def run(self):
         initCheck()
         beginTimer = time.time()
 
         while(not self.breakPoint):
-            run(beginTimer)
+            run(beginTimer, self.nickname)
         # 쓰레드로 동작시킬 함수 내용 구현
 
     def stop(self):
@@ -77,6 +78,7 @@ class LoginClass(QDialog, login_form_class):
 
             mainWindow = RunClass(self)
             mainWindow.setNickname(self.nickname)
+            mainWindow.setThread()
             mainWindow.exec()
 
             self.idEdit.setText("")
@@ -106,6 +108,8 @@ class RunClass(QDialog, run_form_class):
 
     def __init__(self, parent=None):
         super().__init__()
+        self.nickname = ""
+
         self.setupUi(self)
         self.titleLabel: QLabel
         self.visitCheckBox:QCheckBox
@@ -124,13 +128,15 @@ class RunClass(QDialog, run_form_class):
 
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
-
-        # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = Thread()
-        self.daemonThread.start()
     
     def setNickname(self, nickname):
+        self.nickname = nickname
         self.titleLabel.setText(nickname + " 님")
+
+    def setThread(self):
+        # start 메소드 호출 -> 자동으로 run 메소드 호출
+        self.daemonThread = Thread(self.nickname)
+        self.daemonThread.start()
 
     def setDB(self):
         print("setDB clicked")

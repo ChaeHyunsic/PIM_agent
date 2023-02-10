@@ -3,8 +3,8 @@ import shutil
 import psutil
 import time
 
-from RunData import *
-from CustomCrypto import *
+from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
+from CustomCrypto import encrypt_all_files, decrypt_all_files
 
 
 def initCheck():
@@ -12,7 +12,7 @@ def initCheck():
         makeDir()
 
 
-def run(beginTimer):
+def run(beginTimer, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -24,8 +24,8 @@ def run(beginTimer):
             check = 1
 
     if(check == 1):
-        # 파일 복호화 (로그인 기능 구현되면 로그인 성공시 실행되도록)
-        #decrypt_all_files(dstPath)
+        # 파일 복호화 
+        decrypt_all_files(dstPath, nickname)
 
         # 파일 옮기기
         fileMove(dstPath, srcPath)
@@ -37,7 +37,7 @@ def run(beginTimer):
 
         if((int)(afterTimer - beginTimer) == 60):   # 타이머 설정
             # 파일 암호화
-            encrypt_all_files(dstPath)
+            encrypt_all_files(dstPath, nickname)
 
 
 def fileMove(srcPath, dstPath):

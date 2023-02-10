@@ -4,9 +4,8 @@ import hashlib
 import os
 import os.path
 
-
-def encrypt(file_name):
-    original_password = str("username").encode('utf8') #username으로 설정
+def encrypt(file_name, nickname):
+    original_password = nickname.encode('utf8') #username으로 설정
     key = hashlib.pbkdf2_hmac(
         hash_name='sha256', password=original_password, salt=b'$3kj##agh_', iterations=100000)
     Block_Size = 16
@@ -23,12 +22,11 @@ def encrypt(file_name):
         os.remove(file_name)
 
 
-def decrypt(file_name):
-    original_password = str("username").encode('utf8') #username으로 설정
+def decrypt(file_name, nickname):
+    original_password = nickname.encode('utf8') #username으로 설정
     key = hashlib.pbkdf2_hmac(
         hash_name='sha256', password=original_password, salt=b'$3kj##agh_', iterations=100000)
     Block_Size = 16
-
 
     with open(file_name, 'rb') as fo:
         ciphertext = fo.read()
@@ -51,15 +49,15 @@ def getAllFiles(filepath):
     return dirs
 
 
-def encrypt_all_files(filepath):
+def encrypt_all_files(filepath, nickname):
     dirs = getAllFiles(filepath)
     for file_name in dirs: 
         if file_name[-4:] != ".enc":
-            encrypt(file_name)
+            encrypt(file_name, nickname)
 
 
-def decrypt_all_files(filepath):
+def decrypt_all_files(filepath, nickname):
     dirs = getAllFiles(filepath)
     for file_name in dirs:
         if file_name[-4:] == ".enc":
-            decrypt(file_name)
+            decrypt(file_name, nickname)
