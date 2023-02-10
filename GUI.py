@@ -108,12 +108,21 @@ class RunClass(QDialog, run_form_class):
         super().__init__()
         self.setupUi(self)
         self.titleLabel: QLabel
+        self.visitCheckBox:QCheckBox
+        self.downloadCheckBox:QCheckBox
+        self.bookmarkCheckBox:QCheckBox
+        self.autoFormCheckBox:QCheckBox
+        self.cookieCheckBox:QCheckBox
+        self.cacheCheckBox:QCheckBox
+        self.sessionCheckBox:QCheckBox
+        self.setDBBtn:QPushButton
         self.logoutBtn: QPushButton
 
         self.setWindowIcon(QIcon("windowIcon.png"))
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
+        self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
 
         # start 메소드 호출 -> 자동으로 run 메소드 호출
@@ -122,6 +131,9 @@ class RunClass(QDialog, run_form_class):
     
     def setNickname(self, nickname):
         self.titleLabel.setText(nickname + " 님")
+
+    def setDB(self):
+        print("setDB clicked")
 
     def logout(self):
         self.daemonThread.stop()
