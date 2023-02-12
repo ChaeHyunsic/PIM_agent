@@ -57,6 +57,8 @@ class LoginClass(QDialog, login_form_class):
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
 
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
@@ -126,6 +128,8 @@ class RunClass(QDialog, run_form_class):
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
     
@@ -157,13 +161,17 @@ class JoinClass(QDialog, join_form_class):
         self.pwdCheckEdit: QLineEdit
         self.nicknameEdit: QLineEdit
         self.joinBtn: QPushButton
+        self.gotoMainBtn: QPushButton
 
         self.idEdit.setText("")
         self.pwdEdit.setText("")
         self.pwdCheckEdit.setText("")
         self.nicknameEdit.setText("")
 
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+
         self.joinBtn.clicked.connect(self.join)
+        self.gotoMainBtn.clicked.connect(self.gotoMain)
 
     def checkIDPWValid(self, edit):
         if re.search('^(?!.*\s)(?!.*[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"])(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,16}$', edit) is None:
@@ -210,6 +218,9 @@ class JoinClass(QDialog, join_form_class):
 
             self.close()
 
+    def gotoMain(self):
+        self.close()
+
 
 # 회원정보 찾기 gui
 class FindClass(QDialog, find_form_class):
@@ -223,9 +234,13 @@ class FindClass(QDialog, find_form_class):
 
         self.findIDBtn: QPushButton
         self.findPWBtn: QPushButton
+        self.gotoMainBtn: QPushButton
+
+        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
         self.findIDBtn.clicked.connect(self.findIDFunc)
         self.findPWBtn.clicked.connect(self.findPWFunc)
+        self.gotoMainBtn.clicked.connect(self.gotoMain)
 
     def findIDFunc(self):
         QMessageBox.setStyleSheet(
@@ -261,6 +276,9 @@ class FindClass(QDialog, find_form_class):
                 QMessageBox.information(
                 self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
+
+    def gotoMain(self):
+        self.close()
 
 
 app = QApplication(sys.argv)
