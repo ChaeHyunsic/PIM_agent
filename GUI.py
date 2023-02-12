@@ -24,13 +24,16 @@ class Thread(QThread):
         self.breakPoint = False
         self.nickname = nickname
 
+    # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
         initCheck()
+
         beginTimer = time.time()
+        flag = 0
 
         while(not self.breakPoint):
-            run(beginTimer, self.nickname)
-        # 쓰레드로 동작시킬 함수 내용 구현
+            beginTimer, flag = run(beginTimer, flag, self.nickname)
+        
 
     def stop(self):
         self.breakPoint = True

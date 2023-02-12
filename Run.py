@@ -2,6 +2,7 @@ import os
 import shutil
 import psutil
 import time
+import webbrowser
 
 from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
 from CustomCrypto import encrypt_all_files, decrypt_all_files
@@ -12,7 +13,7 @@ def initCheck():
         makeDir()
 
 
-def run(beginTimer, nickname):
+def run(beginTimer, flag, nickname):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -23,21 +24,38 @@ def run(beginTimer, nickname):
         if ps_name == "chrome.exe":
             check = 1
 
-    if(check == 1):
+    if(check == 1 and flag == 0):
+        # 파일 옮기기
+        fileMove(dstPath, srcPath)
+
+        beginTimer = time.time()
+
+        return beginTimer, 0
+    elif(check == 1 and flag == 1):
+        os.system('taskkill /f /im chrome.exe')
+
         # 파일 복호화 
         decrypt_all_files(dstPath, nickname)
 
         # 파일 옮기기
         fileMove(dstPath, srcPath)
+
+        webbrowser.open("https://google.com")
+        beginTimer = time.time()
+
+        return beginTimer, 0
     elif (check == 0):
         # 파일 옮기기
         fileMove(srcPath, dstPath)
 
         afterTimer = time.time()
 
-        if((int)(afterTimer - beginTimer) == 60):   # 타이머 설정
+        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
             # 파일 암호화
             encrypt_all_files(dstPath, nickname)
+            return beginTimer, 1
+        else:
+            return beginTimer, 0
 
 
 def fileMove(srcPath, dstPath):
