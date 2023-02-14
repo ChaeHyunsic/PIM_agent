@@ -16,7 +16,7 @@ join_form_class = uic.loadUiType("joinGUI.ui")[0]
 find_form_class = uic.loadUiType("findGUI.ui")[0]
 
 
-class Thread(QThread):
+class runThread(QThread):
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -142,7 +142,7 @@ class RunClass(QDialog, run_form_class):
 
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = Thread(self.nickname)
+        self.daemonThread = runThread(self.nickname)
         self.daemonThread.start()
 
     def setDB(self):
