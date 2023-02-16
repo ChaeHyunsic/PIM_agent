@@ -27,7 +27,7 @@ def run(beginTimer, flag, nickname):
 
     if(check == 1 and flag == 0):
         # 파일 옮기기
-        fileMove(dstPath, srcPath)
+        fileMove(dstPath, srcPath, nickname)
 
         beginTimer = time.time()
 
@@ -42,7 +42,7 @@ def run(beginTimer, flag, nickname):
         decryptThread.stop()
 
         # 파일 옮기기
-        fileMove(dstPath, srcPath)
+        fileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
         beginTimer = time.time()
@@ -50,7 +50,7 @@ def run(beginTimer, flag, nickname):
         return beginTimer, 0
     elif (check == 0 and flag == 0):
         # 파일 옮기기
-        fileMove(srcPath, dstPath)
+        fileMove(srcPath, dstPath, nickname)
 
         afterTimer = time.time()
 
@@ -70,8 +70,8 @@ def run(beginTimer, flag, nickname):
         return beginTimer, 1
 
 
-def fileMove(srcPath, dstPath):
-    filenames = getControlDataNames()
+def fileMove(srcPath, dstPath, nickname):
+    filenames = getControlDataNames(nickname)
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):

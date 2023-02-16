@@ -117,9 +117,9 @@ class RunClass(QDialog, run_form_class):
 
         self.setupUi(self)
         self.titleLabel: QLabel
+        self.bookmarkCheckBox:QCheckBox
         self.visitCheckBox:QCheckBox
         self.downloadCheckBox:QCheckBox
-        self.bookmarkCheckBox:QCheckBox
         self.autoFormCheckBox:QCheckBox
         self.cookieCheckBox:QCheckBox
         self.cacheCheckBox:QCheckBox
@@ -143,11 +143,11 @@ class RunClass(QDialog, run_form_class):
         checkRetval = getCustomSetting(self.nickname)
 
         if checkRetval[0] == 0:
-            self.visitCheckBox.toggle()
-        if checkRetval[1] == 0:
-            self.downloadCheckBox.toggle()
-        if checkRetval[2] == 0:
             self.bookmarkCheckBox.toggle()
+        if checkRetval[1] == 0:
+            self.visitCheckBox.toggle()
+        if checkRetval[2] == 0:
+            self.downloadCheckBox.toggle()
         if checkRetval[3] == 0:
             self.autoFormCheckBox.toggle()
         if checkRetval[4] == 0:
@@ -163,15 +163,15 @@ class RunClass(QDialog, run_form_class):
         self.daemonThread.start()
 
     def setDB(self):
+        bookmarkCheck = 1 if self.bookmarkCheckBox.isChecked() is True else 0
         visitCheck = 1 if self.visitCheckBox.isChecked() is True else 0
         downloadCheck = 1 if self.downloadCheckBox.isChecked() is True else 0
-        bookmarkCheck = 1 if self.bookmarkCheckBox.isChecked() is True else 0
         autoFormCheck = 1 if self.autoFormCheckBox.isChecked() is True else 0
         cookieCheck = 1 if self.cookieCheckBox.isChecked() is True else 0
         cacheCheck = 1 if self.cacheCheckBox.isChecked() is True else 0
         sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
 
-        setCustomSetting(visitCheck, downloadCheck, bookmarkCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
+        setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
 
     def logout(self):
         self.daemonThread.stop()
