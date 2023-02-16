@@ -5,10 +5,9 @@ from win32comext.shell import shell
 
 
 def getControlDataNames():
-    controlDataNames = ["/Bookmarks", "/Bookmarks.bak", "/DownloadMetadata", "/Extension Cookies", "/Extension Cookies-journal", 
-                        "/History", "/History-journal", "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", 
-                        "/Shortcuts", "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Visited Links", "/Web Data", "/Web Data-journal",
-                        "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage"]
+    controlDataNames = ["/Bookmarks", "/Bookmarks.bak", "/DownloadMetadata", "/History", "/History-journal", "/Login Data", "/Login Data For Account", 
+                        "/Login Data-journal", "/Preferences", "/Shortcuts", "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Visited Links", 
+                        "/Web Data", "/Web Data-journal", "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage"]
 
     return controlDataNames
 
