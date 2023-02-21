@@ -5,8 +5,7 @@ import time
 import webbrowser
 
 from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
-from CustomCrypto import encrypt_all_files, decrypt_all_files
-from LoadingGUI import encryptLoadingThread, decryptLoadingThread
+from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass
 
 
 def initCheck():
@@ -35,11 +34,8 @@ def run(beginTimer, flag, nickname):
     elif(check == 1 and flag == 1):
         os.system('taskkill /f /im chrome.exe')
 
-        decryptThread = decryptLoadingThread()
-        decryptThread.start()
-        # 파일 복호화 
-        decrypt_all_files(dstPath, nickname)
-        decryptThread.stop()
+        decryptThread = DecryptLoadingClass(dstPath, nickname)
+        decryptThread.exec()
 
         # 파일 옮기기
         fileMove(dstPath, srcPath, nickname)
@@ -55,13 +51,8 @@ def run(beginTimer, flag, nickname):
         afterTimer = time.time()
 
         if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
-            encryptThread = encryptLoadingThread()
-            encryptThread.start()
-
-            # 파일 암호화
-            encrypt_all_files(dstPath, nickname)
-
-            encryptThread.stop()
+            encryptThread = EncryptLoadingClass(dstPath, nickname)
+            encryptThread.exec()
 
             return beginTimer, 1
         else:
