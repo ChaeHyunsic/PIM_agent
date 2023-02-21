@@ -1,13 +1,16 @@
+import os
 import sys
 import time
 import re
+import webbrowser
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import initCheck, run
+from Run import initCheck, runMem, runGuest
+from RunData import getSrcPath, guestFileRemove
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
@@ -15,8 +18,25 @@ run_form_class = uic.loadUiType("runGUI.ui")[0]
 join_form_class = uic.loadUiType("joinGUI.ui")[0]
 find_form_class = uic.loadUiType("findGUI.ui")[0]
 
+class runGuestThread(QThread):
 
-class runThread(QThread):
+    # 초기화 메서드 구현
+    def __init__(self):
+        super().__init__()
+        self.breakPoint = False
+
+    # 쓰레드로 동작시킬 함수 내용 구현
+    def run(self):
+        while(not self.breakPoint):
+            runGuest()
+
+    def stop(self):
+        self.breakPoint = True
+        self.quit()
+        self.wait(3000)
+
+
+class runMemThread(QThread):
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -32,7 +52,7 @@ class runThread(QThread):
         flag = 0
 
         while(not self.breakPoint):
-            beginTimer, flag = run(beginTimer, flag, self.nickname)
+            beginTimer, flag = runMem(beginTimer, flag, self.nickname)
         
 
     def stop(self):
@@ -62,6 +82,9 @@ class LoginClass(QDialog, login_form_class):
 
         self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
 
+        self.daemonThread = runGuestThread()
+        self.daemonThread.start()
+
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
@@ -80,10 +103,14 @@ class LoginClass(QDialog, login_form_class):
         checkLogin, self.nickname = getLoginData(self.id, self.password)
         if(checkLogin):
             self.hide()
+            self.daemonThread.stop()
+            os.system('taskkill /f /im chrome.exe')
+            time.sleep(1)
 
             mainWindow = RunClass(self)
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
+
             mainWindow.exec()
 
             self.idEdit.setText("")
@@ -159,7 +186,7 @@ class RunClass(QDialog, run_form_class):
 
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = runThread(self.nickname)
+        self.daemonThread = runMemThread(self.nickname)
         self.daemonThread.start()
 
     def setDB(self):

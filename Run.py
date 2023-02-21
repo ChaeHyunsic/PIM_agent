@@ -4,7 +4,7 @@ import psutil
 import time
 import webbrowser
 
-from RunData import checkDir, makeDir, getSrcPath, getDstPath, getControlDataNames
+from RunData import checkDir, makeDir, getSrcPath, getDstPath, memberFileMove, guestFileRemove
 from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass
 
 
@@ -12,8 +12,7 @@ def initCheck():
     if not(checkDir()):
         makeDir()
 
-
-def run(beginTimer, flag, nickname):
+def runGuest():
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath()
@@ -23,10 +22,27 @@ def run(beginTimer, flag, nickname):
 
         if ps_name == "chrome.exe":
             check = 1
+            break
+
+    if(check == 0):
+        guestFileRemove(srcPath, dstPath)
+
+
+def runMem(beginTimer, flag, nickname):
+    check = 0
+    srcPath = getSrcPath()
+    dstPath = getDstPath()
+
+    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
+        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
+
+        if ps_name == "chrome.exe":
+            check = 1
+            break
 
     if(check == 1 and flag == 0):
         # 파일 옮기기
-        fileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname)
 
         beginTimer = time.time()
 
@@ -38,7 +54,7 @@ def run(beginTimer, flag, nickname):
         decryptThread.exec()
 
         # 파일 옮기기
-        fileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname)
 
         webbrowser.open("https://google.com")
         beginTimer = time.time()
@@ -46,7 +62,7 @@ def run(beginTimer, flag, nickname):
         return beginTimer, 0
     elif (check == 0 and flag == 0):
         # 파일 옮기기
-        fileMove(srcPath, dstPath, nickname)
+        memberFileMove(srcPath, dstPath, nickname)
 
         afterTimer = time.time()
 
@@ -60,17 +76,3 @@ def run(beginTimer, flag, nickname):
     elif (check==0 and flag == 1):
         return beginTimer, 1
 
-
-def fileMove(srcPath, dstPath, nickname):
-    filenames = getControlDataNames(nickname)
-
-    for filename in filenames:
-        if(os.path.isfile(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                os.remove(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
-
-        elif(os.path.isdir(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                shutil.rmtree(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
