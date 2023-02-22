@@ -1,8 +1,6 @@
 import os
-import sys
 import shutil
 
-from win32comext.shell import shell
 from DB_setting import getCustomSetting
 
 def getControlDataNames(nickname):
@@ -46,30 +44,22 @@ def getSrcPath():
 
     return homePath
 
-def getDstPath():
-    dstPath = "C:/Program Files/PIM_AGENT"
+def getDstPath(nickname):
+    dstPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
 
     return dstPath
 
-def checkDir():
-    dirPath = "C:/Program Files/PIM_AGENT"
+def initCheck():
+    dirPath = os.path.expanduser('~/AppData/Local/PIM_AGENT').replace('\\', '/')
 
-    if(os.path.isdir(dirPath)):
-        return True
-    else:
-        return False
+    if(not os.path.isdir(dirPath)):
+        os.mkdir(dirPath)
 
-def makeDir():
-    ASADMIN = 'asadmin'
-    dirPath = "C:/Program Files/PIM_AGENT"
+def initLocalCheck(nickname):
+    dirPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
 
-    if sys.argv[-1] != ASADMIN:
-        script = os.path.abspath(sys.argv[0])
-        params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
-        shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
-        sys.exit()
-
-    os.mkdir(dirPath)
+    if(not os.path.isdir(dirPath)):
+        os.mkdir(dirPath)
 
 def memberFileMove(srcPath, dstPath, nickname):
     filenames = getControlDataNames(nickname)
@@ -85,6 +75,16 @@ def memberFileMove(srcPath, dstPath, nickname):
                 shutil.rmtree(dstPath + filename)
             shutil.move(srcPath + filename, dstPath + filename)
 
+def memberFileRemove(srcPath, nickname):
+    filenames = getRemoveDataNames(nickname)
+
+    for filename in filenames:
+        if(os.path.isfile(srcPath + filename)):
+            os.remove(srcPath + filename)
+
+        elif(os.path.isdir(srcPath + filename)):
+            shutil.rmtree(srcPath + filename)
+
 def guestFileRemove(srcPath, flag):
     if(flag == 0):
         filenames = getControlDataNames(None)
@@ -93,7 +93,7 @@ def guestFileRemove(srcPath, flag):
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):
-                os.remove(srcPath + filename)
+            os.remove(srcPath + filename)
 
         elif(os.path.isdir(srcPath + filename)):
-                shutil.rmtree(srcPath + filename)
+            shutil.rmtree(srcPath + filename)

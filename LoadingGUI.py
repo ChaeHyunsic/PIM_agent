@@ -8,13 +8,13 @@ from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 
 from CustomCrypto import encrypt_all_files, decrypt_all_files
-from RunData import guestFileRemove
+from RunData import guestFileRemove, initLocalCheck, memberFileRemove
 
 
-encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
-decryptLoading_form_class = uic.loadUiType("decryptLoadingGUI.ui")[0]
-preGuest_form_class = uic.loadUiType("preGuestGui.ui")[0]
-preMem_form_class = uic.loadUiType("preMemGui.ui")[0]
+encryptLoading_form_class = uic.loadUiType("UI/encryptLoadingGUI.ui")[0]
+decryptLoading_form_class = uic.loadUiType("UI/decryptLoadingGUI.ui")[0]
+preGuest_form_class = uic.loadUiType("UI/preGuestGui.ui")[0]
+preMem_form_class = uic.loadUiType("UI/preMemGui.ui")[0]
 
 class focusOnThread(QThread):
     
@@ -56,65 +56,68 @@ class preGuestThread(QThread):
 class preMemThread(QThread):
     preMem_signal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, nickname):
         super().__init__()
+        self.nickname = nickname
 
     def run(self):
         os.system('taskkill /f /im chrome.exe')
+        initLocalCheck(self.nickname)
         time.sleep(1)
         self.preMem_signal.emit()
 
 
 class encryptThread(QThread):
-    encrypt_signal = pyqtSignal(bool)
+    encrypt_signal = pyqtSignal()
 
-    def __init__(self, dstPath, nickname):
+    def __init__(self, srcPath, dstPath, nickname):
         super().__init__()
+        self.srcPath = srcPath
         self.dstPath = dstPath
         self.nickname = nickname
-        self.retval = False
     
     def run(self):
-        self.retval = encrypt_all_files(self.dstPath, self.nickname)
-        self.encrypt_signal.emit(self.retval)
+        encrypt_all_files(self.dstPath, self.nickname)
+        memberFileRemove(self.srcPath, self.nickname)
+        self.encrypt_signal.emit()
 
 
 class decryptThread(QThread):
-    decrypt_signal = pyqtSignal(bool)
+    decrypt_signal = pyqtSignal()
 
     def __init__(self, dstPath, nickname):
         super().__init__()
         self.dstPath = dstPath
         self.nickname = nickname
-        self.retval = False
     
     def run(self):
-        self.retval = decrypt_all_files(self.dstPath, self.nickname)
-        self.decrypt_signal.emit(self.retval)
+        decrypt_all_files(self.dstPath, self.nickname)
+        self.decrypt_signal.emit()
 
 
 class EncryptLoadingClass(QDialog, encryptLoading_form_class):
 
-    def __init__(self, dstPath, nickname):
+    def __init__(self, srcPath, dstPath, nickname):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
         self.encryptLoadingGIF:QLabel
 
+        self.srcPath = srcPath
         self.dstPath = dstPath
         self.nickname = nickname
         
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # 동적 이미지 추가
-        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie = QMovie('Image/loadingImg.gif', QByteArray(), self)
         self.loadingmovie.setCacheMode(QMovie.CacheAll)
 
         # QLabel에 동적 이미지 삽입
         self.encryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
 
-        self.encryptTh = encryptThread(self.dstPath, self.nickname)
+        self.encryptTh = encryptThread(self.srcPath, self.dstPath, self.nickname)
         self.focusOnTh = focusOnThread()
 
         self.encryptTh.encrypt_signal.connect(self.doneLoading)
@@ -123,17 +126,17 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         self.focusOnTh.start()
 
 
-    def doneLoading(self,retval):
-        if retval == True:
-            self.focusOnTh.terminate()
-            self.close()
+    def doneLoading(self):
+        self.encryptTh.terminate()
+        self.focusOnTh.terminate()
+        self.close()
 
 
 class DecryptLoadingClass(QDialog, decryptLoading_form_class):
     def __init__(self, dstPath, nickname):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
         
         self.decryptLoadingGIF:QLabel
 
@@ -143,7 +146,7 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # 동적 이미지 추가
-        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie = QMovie('Image/loadingImg.gif', QByteArray(), self)
         self.loadingmovie.setCacheMode(QMovie.CacheAll)
 
         # QLabel에 동적 이미지 삽입
@@ -158,23 +161,23 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
         self.decryptTh.start()
         self.focusOnTh.start()
 
-    def doneLoading(self,retval):
-        if retval == True:
-            self.focusOnTh.terminate()
-            self.close()
+    def doneLoading(self):
+        self.decryptTh.terminate()
+        self.focusOnTh.terminate()
+        self.close()
 
 class preGuestClass(QDialog, preGuest_form_class):
     def __init__(self, srcPath):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
         self.preGuestGIF:QLabel
         self.srcPath = srcPath
 
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # 동적 이미지 추가
-        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie = QMovie('Image/loadingImg.gif', QByteArray(), self)
         self.loadingmovie.setCacheMode(QMovie.CacheAll)
 
         # QLabel에 동적 이미지 삽입
@@ -195,23 +198,24 @@ class preGuestClass(QDialog, preGuest_form_class):
         self.close()
 
 class preMemClass(QDialog, preMem_form_class):
-    def __init__(self):
+    def __init__(self, nickname):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
         self.preMemGIF:QLabel
+        self.nickname = nickname
 
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
         # 동적 이미지 추가
-        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie = QMovie('Image/loadingImg.gif', QByteArray(), self)
         self.loadingmovie.setCacheMode(QMovie.CacheAll)
 
         # QLabel에 동적 이미지 삽입
         self.preMemGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
 
-        self.preMemTh = preMemThread()
+        self.preMemTh = preMemThread(self.nickname)
         self.focusOnTh = focusOnThread()
 
         self.preMemTh.preMem_signal.connect(self.doneProc)

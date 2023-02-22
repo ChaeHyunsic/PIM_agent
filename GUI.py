@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 import re
@@ -8,14 +7,15 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import initCheck, runMem, runGuest
+from Run import runMem, runGuest
+from RunData import initCheck
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 from LoadingGUI import preMemClass
 
-login_form_class = uic.loadUiType("loginGUI.ui")[0]
-run_form_class = uic.loadUiType("runGUI.ui")[0]
-join_form_class = uic.loadUiType("joinGUI.ui")[0]
-find_form_class = uic.loadUiType("findGUI.ui")[0]
+login_form_class = uic.loadUiType("UI/loginGUI.ui")[0]
+run_form_class = uic.loadUiType("UI/runGUI.ui")[0]
+join_form_class = uic.loadUiType("UI/joinGUI.ui")[0]
+find_form_class = uic.loadUiType("UI/findGUI.ui")[0]
 
 class runGuestThread(QThread):
 
@@ -48,7 +48,6 @@ class runMemThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-        initCheck()
 
         beginTimer = time.time()
         flag = 0
@@ -70,7 +69,7 @@ class LoginClass(QDialog, login_form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
 
         self.id = ""
         self.password = ""
@@ -91,6 +90,8 @@ class LoginClass(QDialog, login_form_class):
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
 
+        initCheck()
+
     def btnLoginFunc(self):
         self.id = self.idEdit.text()
         self.password = self.pwdEdit.text()
@@ -107,7 +108,7 @@ class LoginClass(QDialog, login_form_class):
             self.hide()
             self.daemonThread.stop()
             
-            preMemThread = preMemClass()
+            preMemThread = preMemClass(self.nickname)
             preMemThread.exec()
 
             mainWindow = RunClass(self)
@@ -160,7 +161,7 @@ class RunClass(QDialog, run_form_class):
         self.setDBBtn:QPushButton
         self.logoutBtn: QPushButton
 
-        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
