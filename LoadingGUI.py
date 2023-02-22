@@ -1,5 +1,6 @@
 import keyboard, pyautogui
 import time
+import os
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -13,6 +14,7 @@ from RunData import guestFileRemove
 encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
 decryptLoading_form_class = uic.loadUiType("decryptLoadingGUI.ui")[0]
 preGuest_form_class = uic.loadUiType("preGuestGui.ui")[0]
+preMem_form_class = uic.loadUiType("preMemGui.ui")[0]
 
 class focusOnThread(QThread):
     
@@ -50,6 +52,17 @@ class preGuestThread(QThread):
     def run(self):
         guestFileRemove(self.srcPath, 1)
         self.preGuest_signal.emit()
+
+class preMemThread(QThread):
+    preMem_signal = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        os.system('taskkill /f /im chrome.exe')
+        time.sleep(1)
+        self.preMem_signal.emit()
 
 
 class encryptThread(QThread):
@@ -178,5 +191,35 @@ class preGuestClass(QDialog, preGuest_form_class):
 
     def doneProc(self):
         self.preGuestTh.terminate()
+        self.focusOnTh.terminate()
+        self.close()
+
+class preMemClass(QDialog, preMem_form_class):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.preMemGIF:QLabel
+
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+
+        # 동적 이미지 추가
+        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie.setCacheMode(QMovie.CacheAll)
+
+        # QLabel에 동적 이미지 삽입
+        self.preMemGIF.setMovie(self.loadingmovie)
+        self.loadingmovie.start()
+
+        self.preMemTh = preMemThread()
+        self.focusOnTh = focusOnThread()
+
+        self.preMemTh.preMem_signal.connect(self.doneProc)
+
+        self.preMemTh.start()
+        self.focusOnTh.start()
+
+    def doneProc(self):
+        self.preMemTh.terminate()
         self.focusOnTh.terminate()
         self.close()

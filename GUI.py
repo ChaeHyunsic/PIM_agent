@@ -10,6 +10,7 @@ from PyQt5.QtCore import *
 
 from Run import initCheck, runMem, runGuest
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
+from LoadingGUI import preMemClass
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
 run_form_class = uic.loadUiType("runGUI.ui")[0]
@@ -105,14 +106,18 @@ class LoginClass(QDialog, login_form_class):
         if(checkLogin):
             self.hide()
             self.daemonThread.stop()
-            os.system('taskkill /f /im chrome.exe')
-            time.sleep(1)
+            
+            preMemThread = preMemClass()
+            preMemThread.exec()
 
             mainWindow = RunClass(self)
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
 
             mainWindow.exec()
+
+            self.daemonThread = runGuestThread()
+            self.daemonThread.start()
 
             self.idEdit.setText("")
             self.pwdEdit.setText("")
