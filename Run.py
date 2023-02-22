@@ -5,17 +5,16 @@ import time
 import webbrowser
 
 from RunData import checkDir, makeDir, getSrcPath, getDstPath, memberFileMove, guestFileRemove
-from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass
+from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass
 
 
 def initCheck():
     if not(checkDir()):
         makeDir()
 
-def runGuest():
+def runGuest(beginTimer, flag):
     check = 0
     srcPath = getSrcPath()
-    dstPath = getDstPath()
 
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
@@ -24,8 +23,24 @@ def runGuest():
             check = 1
             break
 
-    if(check == 0):
-        guestFileRemove(srcPath, dstPath)
+    if(check == 0 and flag == False):
+        guestFileRemove(srcPath, 0)
+
+        afterTimer = time.time()
+
+        if((int)(afterTimer - beginTimer) >= 10):   # 타이머 설정
+            preGuestThread = preGuestClass(srcPath)
+            preGuestThread.exec()
+
+            return beginTimer, True
+
+        return beginTimer, False
+    elif (check == 0 and flag == True):
+        return beginTimer, flag
+    else:
+        beginTimer = time.time()
+
+        return beginTimer, False
 
 
 def runMem(beginTimer, flag, nickname):

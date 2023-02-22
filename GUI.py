@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import re
-import webbrowser
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -10,7 +9,6 @@ from PyQt5 import uic
 from PyQt5.QtCore import *
 
 from Run import initCheck, runMem, runGuest
-from RunData import getSrcPath, guestFileRemove
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 
 login_form_class = uic.loadUiType("loginGUI.ui")[0]
@@ -24,11 +22,14 @@ class runGuestThread(QThread):
     def __init__(self):
         super().__init__()
         self.breakPoint = False
+        self.flag = False
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
+        beginTimer = time.time()
+
         while(not self.breakPoint):
-            runGuest()
+            beginTimer, self.flag = runGuest(beginTimer, self.flag)
 
     def stop(self):
         self.breakPoint = True

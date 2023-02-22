@@ -5,17 +5,11 @@ import shutil
 from win32comext.shell import shell
 from DB_setting import getCustomSetting
 
-def getGuestDataNames():
-    guestDataNames = ["/Bookmarks", "/Bookmarks.bak","/History", "/History-journal", "/Visited Links", "/DownloadMetadata", 
-                        "/Login Data", "/Login Data For Account", "/Login Data-journal", "/Preferences", "/Shortcuts", 
-                        "/Shortcuts-journal", "/Top Sites", "/Top Sites-journal", "/Web Data", "/Web Data-journal", 
-                        "/Local State", "/IndexedDB", "/Storage", "/Sync App Settings", "/Sync Data", "/WebStorage", 
-                        "/Cookies","/cache", "/Code cache", "/DawnCache","/Session Storage", "/Sessions"]
-
-    return guestDataNames
-
 def getControlDataNames(nickname):
-    checkRetval = getCustomSetting(nickname)
+    if(nickname == None):
+        checkRetval = [1,1,1,1,1,1,1]
+    else:
+        checkRetval = getCustomSetting(nickname)
     controlDataNames = []
 
     if checkRetval[0] == 1:
@@ -32,7 +26,10 @@ def getControlDataNames(nickname):
     return controlDataNames
 
 def getRemoveDataNames(nickname):
-    checkRetval = getCustomSetting(nickname)
+    if(nickname == None):
+        checkRetval = [1,1,1,1,1,1,1]
+    else:
+        checkRetval = getCustomSetting(nickname)
     removeDataNames = []
 
     if checkRetval[4] == 1:
@@ -88,23 +85,15 @@ def memberFileMove(srcPath, dstPath, nickname):
                 shutil.rmtree(dstPath + filename)
             shutil.move(srcPath + filename, dstPath + filename)
 
-def guestFileRemove(srcPath, dstPath):
-    filenames = getGuestDataNames()
+def guestFileRemove(srcPath, flag):
+    if(flag == 0):
+        filenames = getControlDataNames(None)
+    else:
+        filenames = getRemoveDataNames(None)
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                os.remove(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
+                os.remove(srcPath + filename)
 
         elif(os.path.isdir(srcPath + filename)):
-            if(os.path.exists(dstPath + filename)):
-                shutil.rmtree(dstPath + filename)
-            shutil.move(srcPath + filename, dstPath + filename)
-    
-    for filename in filenames:
-        if(os.path.isfile(dstPath + filename)):
-            os.remove(dstPath + filename)
-
-        elif(os.path.isdir(dstPath + filename)):
-            shutil.rmtree(dstPath + filename)
+                shutil.rmtree(srcPath + filename)

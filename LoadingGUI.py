@@ -7,10 +7,12 @@ from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 
 from CustomCrypto import encrypt_all_files, decrypt_all_files
+from RunData import guestFileRemove
 
 
 encryptLoading_form_class = uic.loadUiType("encryptLoadingGUI.ui")[0]
 decryptLoading_form_class = uic.loadUiType("decryptLoadingGUI.ui")[0]
+preGuest_form_class = uic.loadUiType("preGuestGui.ui")[0]
 
 class focusOnThread(QThread):
     
@@ -37,6 +39,18 @@ class focusOnThread(QThread):
         self.breakPoint = True
         self.terminate()
         self.wait(3000)
+
+class preGuestThread(QThread):
+    preGuest_signal = pyqtSignal()
+
+    def __init__(self, srcPath):
+        super().__init__()
+        self.srcPath = srcPath
+
+    def run(self):
+        guestFileRemove(self.srcPath, 1)
+        self.preGuest_signal.emit()
+
 
 class encryptThread(QThread):
     encrypt_signal = pyqtSignal(bool)
@@ -135,3 +149,34 @@ class DecryptLoadingClass(QDialog, decryptLoading_form_class):
         if retval == True:
             self.focusOnTh.terminate()
             self.close()
+
+class preGuestClass(QDialog, preGuest_form_class):
+    def __init__(self, srcPath):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("windowIcon.png"))
+        self.preGuestGIF:QLabel
+        self.srcPath = srcPath
+
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
+
+        # 동적 이미지 추가
+        self.loadingmovie = QMovie('loadingImg.gif', QByteArray(), self)
+        self.loadingmovie.setCacheMode(QMovie.CacheAll)
+
+        # QLabel에 동적 이미지 삽입
+        self.preGuestGIF.setMovie(self.loadingmovie)
+        self.loadingmovie.start()
+
+        self.preGuestTh = preGuestThread(self.srcPath)
+        self.focusOnTh = focusOnThread()
+
+        self.preGuestTh.preGuest_signal.connect(self.doneProc)
+
+        self.preGuestTh.start()
+        self.focusOnTh.start()
+
+    def doneProc(self):
+        self.preGuestTh.terminate()
+        self.focusOnTh.terminate()
+        self.close()
