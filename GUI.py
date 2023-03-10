@@ -1,5 +1,4 @@
 import sys
-import time
 import re
 
 from PyQt5.QtWidgets import *
@@ -7,7 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import runMem, runGuest
+from Run import runMem, runGuest, trayGuest, trayMem
 from RunData import initCheck
 from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
 from LoadingGUI import preMemClass
@@ -27,10 +26,9 @@ class runGuestThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-        beginTimer = time.time()
 
         while(not self.breakPoint):
-            beginTimer, self.flag = runGuest(beginTimer, self.flag)
+            self.flag = runGuest(self.flag)
 
     def stop(self):
         self.breakPoint = True
@@ -45,31 +43,114 @@ class runMemThread(QThread):
         super().__init__()
         self.breakPoint = False
         self.nickname = nickname
+        self.flag = False
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
 
-        beginTimer = time.time()
-        flag = 0
-
         while(not self.breakPoint):
-            beginTimer, flag = runMem(beginTimer, flag, self.nickname)
-        
+            self.flag = runMem(self.flag, self.nickname)
 
     def stop(self):
         self.breakPoint = True
         self.quit()
         self.wait(3000)
 
+class trayGuestThread(QThread):
+
+    def __init__(self, parent=None):
+        super().__init__()
+        self.breakPoint = False
+        self.flag = False
+
+    def run(self):
+
+        while(not self.breakPoint):
+            self.flag = trayGuest(self.flag)
+
+
+class trayMemThread(QThread):
+
+    def __init__(self, nickname, parent=None):
+        super().__init__()
+        self.breakPoint = False
+        self.nickname = nickname
+        self.flag = False
+
+    def run(self):
+
+        while(not self.breakPoint):
+            self.flag = trayMem(self.flag, self.nickname)
+
+#트레이 아이콘
+class TrayIcon(QSystemTrayIcon):
+    def __init__(self, icon, parent, seperator, nickname):
+        self.icon = icon
+        self.seperator = seperator
+        self.nickname = nickname
+        QSystemTrayIcon.__init__(self, self.icon, parent)
+        self.setToolTip("PIM agent")
+        
+        self.menu = QMenu()
+        self.showAction = self.menu.addAction('에이전트 실행')
+        self.showAction.triggered.connect(self.showWindow)
+        
+        self.exitAction = self.menu.addAction('에이전트 종료')
+        self.exitAction.triggered.connect(QCoreApplication.instance().quit)
+        self.setContextMenu(self.menu)
+        
+        self.disambiguateTimer = QTimer(self)
+        self.disambiguateTimer.setSingleShot(True)
+        self.activated.connect(self.onTrayIconActivated)
+
+        if self.seperator == "guest":
+            self.th = trayGuestThread()
+            self.th.start()
+        else:
+            self.th = trayMemThread(self.nickname)
+            self.th.start()
+
+
+    def onTrayIconActivated(self, reason):
+        if reason == QSystemTrayIcon.Trigger:
+            self.disambiguateTimer.start(qApp.doubleClickInterval())
+        elif reason == QSystemTrayIcon.DoubleClick:
+            self.disambiguateTimer.stop()
+            self.showAction.setDisabled(True)
+            self.th.terminate()
+            self.hide()
+            if self.seperator == "guest":
+                preGuest = LoginClass(self)
+                preGuest.exec()
+            else:
+                mainWindow = RunClass(self)
+                mainWindow.setNickname(self.nickname)
+                mainWindow.setThread()
+                mainWindow.exec()
+
+    def showWindow(self):
+        self.th.terminate()
+        self.hide()
+        if self.seperator == "guest":
+                preGuest = LoginClass(self)
+                preGuest.exec()
+        else:
+            mainWindow = RunClass(self)
+            mainWindow.setNickname(self.nickname)
+            mainWindow.setThread()
+            mainWindow.exec()
+
+
 # 로그인 gui
 
 
 class LoginClass(QDialog, login_form_class):
 
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon("Image/windowIcon.png"))
+        self.app = app
 
         self.id = ""
         self.password = ""
@@ -80,8 +161,13 @@ class LoginClass(QDialog, login_form_class):
         self.loginBtn: QPushButton
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
+        self.runBackgroundBtn:QPushButton
+        self.minimizeBtn:QPushButton
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        self.runBackgroundBtn.setIcon(QIcon("image/closeIcon.png"))
+        self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
 
         self.daemonThread = runGuestThread()
         self.daemonThread.start()
@@ -89,8 +175,19 @@ class LoginClass(QDialog, login_form_class):
         self.loginBtn.clicked.connect(self.btnLoginFunc)
         self.joinBtn.clicked.connect(self.btnJoinFunc)
         self.findBtn.clicked.connect(self.btnFindFunc)
+        self.minimizeBtn.clicked.connect(self.minimize)
+        self.runBackgroundBtn.clicked.connect(self.runBackground)
 
         initCheck()
+
+    def minimize(self):
+        self.showMinimized()
+
+    def runBackground(self):
+        self.daemonThread.terminate()
+        self.hide()
+        trayicon = TrayIcon(QIcon('Image/windowIcon.png'), self.app, "guest", "guest")
+        trayicon.show()
 
     def btnLoginFunc(self):
         self.id = self.idEdit.text()
@@ -105,24 +202,17 @@ class LoginClass(QDialog, login_form_class):
 
         checkLogin, self.nickname = getLoginData(self.id, self.password)
         if(checkLogin):
-            self.hide()
+            self.close()
             self.daemonThread.stop()
             
             preMemThread = preMemClass(self.nickname)
             preMemThread.exec()
 
-            mainWindow = RunClass(self)
+            mainWindow = RunClass(self.app)
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
 
             mainWindow.exec()
-
-            self.daemonThread = runGuestThread()
-            self.daemonThread.start()
-
-            self.idEdit.setText("")
-            self.pwdEdit.setText("")
-            self.show()
         else:
             QMessageBox.setStyleSheet(
                 self, 'QMessageBox {color: rgb(120, 120, 120)}')
@@ -145,12 +235,15 @@ class LoginClass(QDialog, login_form_class):
 
 class RunClass(QDialog, run_form_class):
 
-    def __init__(self, parent=None):
+    def __init__(self, app):
         super().__init__()
-        self.nickname = ""
-
         self.setupUi(self)
+        self.app = app
+        self.trayIcon = QSystemTrayIcon(QIcon("Image/windowIcon.png"), parent = self.app)
+
+        self.nickname = ""
         self.titleLabel: QLabel
+        
         self.bookmarkCheckBox:QCheckBox
         self.visitCheckBox:QCheckBox
         self.downloadCheckBox:QCheckBox
@@ -160,15 +253,22 @@ class RunClass(QDialog, run_form_class):
         self.sessionCheckBox:QCheckBox
         self.setDBBtn:QPushButton
         self.logoutBtn: QPushButton
+        self.runBackgroundBtn:QPushButton
+        self.minimizeBtn:QPushButton
+        
+        self.runBackgroundBtn.setIcon(QIcon("Image/closeIcon.png"))
+        self.minimizeBtn.setIcon(QIcon("Image/minimizeIcon.png"))
 
         self.setWindowIcon(QIcon("Image/windowIcon.png"))
 
         self.titleLabel.setAlignment(Qt.AlignCenter)
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.setDBBtn.clicked.connect(self.setDB)
         self.logoutBtn.clicked.connect(self.logout)
+        self.minimizeBtn.clicked.connect(self.minimize)
+        self.runBackgroundBtn.clicked.connect(self.runBackground)
     
     def setNickname(self, nickname):
         self.nickname = nickname
@@ -207,9 +307,22 @@ class RunClass(QDialog, run_form_class):
 
         setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
 
+    def minimize(self):
+        self.showMinimized()
+
+    def runBackground(self):
+        self.hide()
+        self.daemonThread.terminate()
+        trayicon = TrayIcon(QIcon('Image/windowIcon.png'), self.app, "member", self.nickname)
+        trayicon.show()
+
+        self.trayIcon.hide()
+
     def logout(self):
         self.daemonThread.stop()
         self.close()
+        preGuest = LoginClass(self.app)
+        preGuest.exec()
 
 
 # 회원가입 gui
@@ -344,6 +457,6 @@ class FindClass(QDialog, find_form_class):
 
 
 app = QApplication(sys.argv)
-loginWindow = LoginClass()
+loginWindow = LoginClass(app)
 loginWindow.show()
 app.exec_()
