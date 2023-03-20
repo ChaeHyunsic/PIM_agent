@@ -14,7 +14,8 @@ def encrypt(file_name, nickname):
     with open(file_name, 'rb') as fo:
         text = fo.read()
     # 파일 읽기
-    aes = AES.new(key, AES.MODE_ECB)
+    iv = b'trvvIlnENsHxyqKp'
+    aes = AES.new(key, AES.MODE_CBC, iv)
     padded_text = pad(text, Block_Size)
     encrypted_text = aes.encrypt(padded_text)
     with open(file_name + ".enc", 'wb') as fo:
@@ -30,7 +31,9 @@ def decrypt(file_name, nickname):
 
     with open(file_name, 'rb') as fo:
         ciphertext = fo.read()
-    aes = AES.new(key, AES.MODE_ECB)
+
+    iv = b'trvvIlnENsHxyqKp'
+    aes = AES.new(key, AES.MODE_CBC, iv)
     decrypted_text = aes.decrypt(ciphertext)
     unpadded_text = unpad(decrypted_text, Block_Size)
     with open(file_name[:-4], 'wb') as fo:
