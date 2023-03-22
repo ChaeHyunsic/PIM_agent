@@ -428,7 +428,7 @@ class FindClass(QDialog, find_form_class):
 
             if(result):
                 QMessageBox.information(
-                self, 'Message', "해당 닉네임으로 연결된 ID는 " + resultID + " 입니다.", QMessageBox.Yes)
+                self, 'Message', "해당 닉네임으로 연결된 ID는 " + resultID[:-3] + "***" + " 입니다.", QMessageBox.Yes)
             else:
                 QMessageBox.information(
                 self, 'Message', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
@@ -446,7 +446,7 @@ class FindClass(QDialog, find_form_class):
 
             if(result):
                 QMessageBox.information(
-                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 " + resultPW + " 입니다.", QMessageBox.Yes)
+                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 " + resultPW[:-3] + "***" + " 입니다.", QMessageBox.Yes)
             else:
                 QMessageBox.information(
                 self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
