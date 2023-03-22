@@ -39,7 +39,7 @@ def runGuest(flag):
     if(check == 0 and flag == False):
         guestFileRemove(srcPath, 0)
 
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             preGuestThread = preGuestClass(srcPath)
             preGuestThread.exec()
 
@@ -85,7 +85,7 @@ def runMem(flag, nickname):
         # 파일 옮기기
         memberFileMove(srcPath, dstPath, nickname)
 
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
             encryptThread.exec()
 
@@ -109,7 +109,7 @@ def trayGuest(flag):
     if(check == 0 and flag == False):
         guestFileRemove(srcPath, 0)
 
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()
@@ -175,7 +175,7 @@ def trayMem(flag, nickname):
         # 파일 옮기기
         memberFileMove(srcPath, dstPath, nickname)
 
-        if((int)(get_idle_duration()) >= 10):   # 타이머 설정
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
             emptyTrayicon.show()

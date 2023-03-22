@@ -77,6 +77,8 @@ def memberFileMove(srcPath, dstPath, nickname):
 
 def memberFileRemove(srcPath, nickname):
     filenames = getRemoveDataNames(nickname)
+    multiProfilePath = srcPath.replace('\\', '/')[:-8]
+    multiProfilenames = getMultiProfilenames()
 
     for filename in filenames:
         if(os.path.isfile(srcPath + filename)):
@@ -85,7 +87,17 @@ def memberFileRemove(srcPath, nickname):
         elif(os.path.isdir(srcPath + filename)):
             shutil.rmtree(srcPath + filename)
 
+    i = 1
+    while(os.path.exists(multiProfilePath + multiProfilenames[0] + str(i))):
+        shutil.rmtree(multiProfilePath + multiProfilenames[0] + str(i))
+        if(os.path.exists(multiProfilePath + multiProfilenames[1])):
+            os.remove(multiProfilePath + multiProfilenames[1])
+        i += 1
+
 def guestFileRemove(srcPath, flag):
+    multiProfilePath = srcPath.replace('\\', '/')[:-8]
+    multiProfilenames = getMultiProfilenames()
+
     if(flag == 0):
         filenames = getControlDataNames(None)
     else:
@@ -97,3 +109,16 @@ def guestFileRemove(srcPath, flag):
 
         elif(os.path.isdir(srcPath + filename)):
             shutil.rmtree(srcPath + filename)
+    
+    i = 1
+    while(os.path.exists(multiProfilePath + multiProfilenames[0] + str(i))):
+        shutil.rmtree(multiProfilePath + multiProfilenames[0] + str(i))
+        if(os.path.exists(multiProfilePath + multiProfilenames[1])):
+            os.remove(multiProfilePath + multiProfilenames[1])
+        i += 1
+
+def getMultiProfilenames():
+    multiProfilenames = []
+    multiProfilenames.extend(["/Profile ", "/Local State"])
+
+    return multiProfilenames
