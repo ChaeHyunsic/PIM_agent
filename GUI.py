@@ -348,8 +348,14 @@ class JoinClass(QDialog, join_form_class):
         self.joinBtn.clicked.connect(self.join)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
 
-    def checkIDPWValid(self, edit):
-        if re.search('^(?!.*\s)(?!.*[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"])(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,16}$', edit) is None:
+    def checkIDValid(self, edit):
+        if re.search('^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$', edit) is None:
+            return False
+        else:
+            return True
+
+    def checkPWValid(self, edit):
+        if re.search('^(?=.*[A-Za-z])(?=.*\d)(?=.*[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"])[A-Za-z\d\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]{8,}$', edit) is None:
             return False
         else:
             return True
@@ -363,8 +369,8 @@ class JoinClass(QDialog, join_form_class):
     def join(self):
         QMessageBox.setStyleSheet(
             self, 'QMessageBox {color: rgb(120, 120, 120)}')
-        idValidation = self.checkIDPWValid(self.idEdit.text())
-        pwdValidation = self.checkIDPWValid(self.pwdEdit.text())
+        idValidation = self.checkIDValid(self.idEdit.text())
+        pwdValidation = self.checkPWValid(self.pwdEdit.text())
         nicknameValidation = self.nicknameValid(self.nicknameEdit.text())
 
         if not(self.idEdit.text() and self.pwdEdit.text() and self.pwdCheckEdit.text() and self.nicknameEdit.text()):
