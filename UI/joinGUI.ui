@@ -14,13 +14,13 @@
    <string>PIM AGENT</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color:qlineargradient(spread:pad, x1:0.5, y1:0.432, x2:0.499682, y2:0.551, stop:0 rgba(215, 215, 215, 255), stop:1 rgba(239, 239, 237, 255))</string>
+   <string notr="true">background-color:qlineargradient(spread:pad, x1:0.5, y1:0.432, x2:0.499682, y2:0.551, stop:0 #E4E4E2, stop:1 #EFEFED)</string>
   </property>
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>70</y>
+     <y>90</y>
      <width>450</width>
      <height>300</height>
     </rect>
@@ -32,8 +32,8 @@
     </font>
    </property>
    <property name="styleSheet">
-    <string notr="true">background-color:#ffffff;
-border: 2px solid black;
+    <string notr="true">background-color:#D7D7D5;
+border: transparent;
 </string>
    </property>
    <property name="frameShape">
@@ -58,7 +58,7 @@ border: 2px solid black;
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:#EFEFED;</string>
+     <string notr="true">background-color:#ffffff;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -68,15 +68,15 @@ border: 2px solid black;
     <property name="geometry">
      <rect>
       <x>233</x>
-      <y>92</y>
+      <y>87</y>
       <width>41</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
+      <family>HY견고딕</family>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -107,7 +107,7 @@ background: transparent;</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:#EFEFED;</string>
+     <string notr="true">background-color:#ffffff;</string>
     </property>
     <property name="echoMode">
      <enum>QLineEdit::Password</enum>
@@ -124,8 +124,8 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
+      <family>HY견고딕</family>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -323,17 +323,21 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
+      <family>HY견고딕</family>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: white;
+     <string notr="true">QPushButton{
+color: white;
 background-color:#474747;
 border-style: solid;
-border-radius:3px;</string>
+border-radius:3px;
+}
+
+ QPushButton:hover {
+background-color:#9E9E9E;
+ }</string>
     </property>
     <property name="text">
      <string>메인으로 돌아가기</string>
@@ -350,13 +354,13 @@ border-radius:3px;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
+      <family>HY견고딕</family>
       <pointsize>14</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: black;
-background-color: #9E9E9E;
+     <string notr="true">color: white;
+background-color:#474747;
 text-align:center;</string>
     </property>
     <property name="text">
@@ -377,8 +381,8 @@ text-align:center;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
+      <family>HY견고딕</family>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -409,7 +413,7 @@ background: transparent;</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:#EFEFED;</string>
+     <string notr="true">background-color:#ffffff;</string>
     </property>
     <property name="echoMode">
      <enum>QLineEdit::Password</enum>
@@ -426,8 +430,8 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
+      <family>HY견고딕</family>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -458,7 +462,7 @@ background: transparent;</string>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:#EFEFED;</string>
+     <string notr="true">background-color:#ffffff;</string>
     </property>
     <property name="echoMode">
      <enum>QLineEdit::Normal</enum>
@@ -475,14 +479,12 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
+      <family>HY견고딕</family>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">border: 5px solid white;
-background-color: rgba(255, 255, 255, 90);
-background: transparent;</string>
+     <string notr="true">border: transparent;</string>
     </property>
     <property name="text">
      <string>회원가입 규칙</string>
@@ -502,15 +504,16 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
+      <family>HY견고딕</family>
       <pointsize>9</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:#EFEFED;</string>
+     <string notr="true">background-color:#ffffff;</string>
     </property>
     <property name="text">
-     <string>1. ID는 6자리 이상 12자리 이하로
+     <string>
+1. ID는 6자리 이상 12자리 이하로
    하나 이상의 영문과 숫자로
    구성되어야 합니다.
 
@@ -708,22 +711,39 @@ background: transparent;</string>
     </property>
     <property name="font">
      <font>
-      <family>함초롬돋움</family>
-      <pointsize>12</pointsize>
-      <weight>50</weight>
-      <bold>false</bold>
+      <family>HY견고딕</family>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: white;
+     <string notr="true">QPushButton{
+color: white;
 background-color:#474747;
 border-style: solid;
-border-radius:3px;</string>
+border-radius:3px;
+}
+
+ QPushButton:hover {
+background-color:#9E9E9E;
+ }</string>
     </property>
     <property name="text">
      <string>회원가입</string>
     </property>
    </widget>
+   <zorder>idEdit</zorder>
+   <zorder>pwdEdit</zorder>
+   <zorder>idLabel</zorder>
+   <zorder>gotoMainBtn</zorder>
+   <zorder>titleLabel</zorder>
+   <zorder>repassLabel</zorder>
+   <zorder>pwdCheckEdit</zorder>
+   <zorder>nicknameLabel</zorder>
+   <zorder>nicknameEdit</zorder>
+   <zorder>ruleLabel</zorder>
+   <zorder>ruleText</zorder>
+   <zorder>joinBtn</zorder>
+   <zorder>passLabel</zorder>
   </widget>
   <widget class="QPushButton" name="minimizeBtn">
    <property name="geometry">
@@ -742,11 +762,13 @@ border-radius:3px;</string>
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-background-color:transparent
+background-color:transparent;
+border:transparent;
+
 }
 
  QPushButton:hover {
-     background-color: #9E9E9E;
+background-color:#EFEFED;
  }</string>
    </property>
    <property name="text">
@@ -775,6 +797,67 @@ background-color:transparent
     <string/>
    </property>
   </widget>
+  <widget class="QLabel" name="titleLabel_2">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>780</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>함초롬돋움</family>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: black;
+background-color: rgba(255,255,255);
+text-align:center;
+ border-bottom: 0.4px solid black;
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="iconlabel">
+   <property name="geometry">
+    <rect>
+     <x>5</x>
+     <y>5</y>
+     <width>20</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>함초롬돋움</family>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: black;
+background-color: rgba(255,255,255);
+text-align:center;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <zorder>titleLabel_2</zorder>
+  <zorder>frame</zorder>
+  <zorder>minimizeBtn</zorder>
+  <zorder>closeBtn</zorder>
+  <zorder>iconlabel</zorder>
  </widget>
  <resources/>
  <connections/>

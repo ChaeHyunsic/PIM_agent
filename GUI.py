@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -37,6 +38,7 @@ class runGuestThread(QThread):
 
 
 class runMemThread(QThread):
+    encrypt_signal = pyqtSignal(bool)
 
     # 초기화 메서드 구현
     def __init__(self, nickname):
@@ -47,9 +49,10 @@ class runMemThread(QThread):
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
-
         while(not self.breakPoint):
             self.flag = runMem(self.flag, self.nickname)
+            if self.flag == True:
+                self.encrypt_signal.emit(self.flag)
 
     def stop(self):
         self.breakPoint = True
@@ -70,6 +73,7 @@ class trayGuestThread(QThread):
 
 
 class trayMemThread(QThread):
+    encrypt_signal = pyqtSignal(bool)
 
     def __init__(self, nickname, parent=None):
         super().__init__()
@@ -81,6 +85,8 @@ class trayMemThread(QThread):
 
         while(not self.breakPoint):
             self.flag = trayMem(self.flag, self.nickname)
+            if self.flag == True:
+                self.encrypt_signal.emit(self.flag)
 
 #트레이 아이콘
 class TrayIcon(QSystemTrayIcon):
@@ -94,10 +100,16 @@ class TrayIcon(QSystemTrayIcon):
         self.menu = QMenu()
         self.showAction = self.menu.addAction('에이전트 실행')
         self.showAction.triggered.connect(self.showWindow)
+
+        self.logoutAction = self.menu.addAction("유저 로그아웃")
+        self.logoutAction.triggered.connect(self.logout)
         
         self.exitAction = self.menu.addAction('에이전트 종료')
         self.exitAction.triggered.connect(QCoreApplication.instance().quit)
+
         self.setContextMenu(self.menu)
+
+        self.logoutAction.setEnabled(False)
         
         self.disambiguateTimer = QTimer(self)
         self.disambiguateTimer.setSingleShot(True)
@@ -107,8 +119,10 @@ class TrayIcon(QSystemTrayIcon):
             self.th = trayGuestThread()
             self.th.start()
         else:
+            self.logoutAction.setEnabled(True)
             self.th = trayMemThread(self.nickname)
             self.th.start()
+            self.th.encrypt_signal.connect(self.logout)
 
 
     def onTrayIconActivated(self, reason):
@@ -139,6 +153,16 @@ class TrayIcon(QSystemTrayIcon):
             mainWindow.setNickname(self.nickname)
             mainWindow.setThread()
             mainWindow.exec()
+    
+    def setSeperator(self, seperator):
+        self.seperator = seperator
+
+    def logout(self):
+        self.th.terminate()
+        self.setSeperator("guest")
+        self.logoutAction.setEnabled(False)
+        self.th = trayGuestThread()
+        self.th.start()
 
 
 # 로그인 gui
@@ -152,6 +176,9 @@ class LoginClass(QDialog, login_form_class):
         self.setWindowIcon(QIcon("Image/windowIcon.png"))
         self.app = app
 
+        self.setCenter()
+        self.prevPos = self.pos()
+
         self.id = ""
         self.password = ""
         self.nickname = ""
@@ -162,12 +189,14 @@ class LoginClass(QDialog, login_form_class):
         self.joinBtn: QPushButton
         self.findBtn: QPushButton
         self.runBackgroundBtn:QPushButton
-        self.minimizeBtn:QPushButton
+        self.minimizeBtn:QPushButton        
+        self.iconlabel:QLabel	
 
         self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.runBackgroundBtn.setIcon(QIcon("image/closeIcon.png"))
         self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.daemonThread = runGuestThread()
         self.daemonThread.start()
@@ -179,6 +208,21 @@ class LoginClass(QDialog, login_form_class):
         self.runBackgroundBtn.clicked.connect(self.runBackground)
 
         initCheck()
+
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
+
 
     def minimize(self):
         self.showMinimized()
@@ -203,7 +247,7 @@ class LoginClass(QDialog, login_form_class):
         checkLogin, self.nickname = getLoginData(self.id, self.password)
         if(checkLogin):
             self.close()
-            self.daemonThread.stop()
+            self.daemonThread.terminate()
             
             preMemThread = preMemClass(self.nickname)
             preMemThread.exec()
@@ -221,12 +265,16 @@ class LoginClass(QDialog, login_form_class):
             return
 
     def btnJoinFunc(self):
+        self.setCenter()
+        self.daemonThread.terminate()	
         self.hide()
         joinWindow = JoinClass(self)
         joinWindow.exec()
         self.show()
 
     def btnFindFunc(self):
+        self.setCenter()
+        self.daemonThread.terminate()	
         self.hide()
         findWindow = FindClass(self)
         findWindow.exec()
@@ -239,10 +287,13 @@ class RunClass(QDialog, run_form_class):
         super().__init__()
         self.setupUi(self)
         self.app = app
-        self.trayIcon = QSystemTrayIcon(QIcon("Image/windowIcon.png"), parent = self.app)
+
+        self.setCenter()
+        self.prevPos = self.pos()
 
         self.nickname = ""
         self.titleLabel: QLabel
+        self.iconlabel:QLabel
         
         self.bookmarkCheckBox:QCheckBox
         self.visitCheckBox:QCheckBox
@@ -256,6 +307,7 @@ class RunClass(QDialog, run_form_class):
         self.runBackgroundBtn:QPushButton
         self.minimizeBtn:QPushButton
         
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
         self.runBackgroundBtn.setIcon(QIcon("Image/closeIcon.png"))
         self.minimizeBtn.setIcon(QIcon("Image/minimizeIcon.png"))
 
@@ -269,7 +321,21 @@ class RunClass(QDialog, run_form_class):
         self.logoutBtn.clicked.connect(self.logout)
         self.minimizeBtn.clicked.connect(self.minimize)
         self.runBackgroundBtn.clicked.connect(self.runBackground)
-    
+
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
+
     def setNickname(self, nickname):
         self.nickname = nickname
         self.titleLabel.setText(nickname + " 님")
@@ -295,6 +361,7 @@ class RunClass(QDialog, run_form_class):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
         self.daemonThread = runMemThread(self.nickname)
         self.daemonThread.start()
+        self.daemonThread.encrypt_signal.connect(self.logout)
 
     def setDB(self):
         bookmarkCheck = 1 if self.bookmarkCheckBox.isChecked() is True else 0
@@ -316,10 +383,8 @@ class RunClass(QDialog, run_form_class):
         trayicon = TrayIcon(QIcon('Image/windowIcon.png'), self.app, "member", self.nickname)
         trayicon.show()
 
-        self.trayIcon.hide()
-
     def logout(self):
-        self.daemonThread.stop()
+        self.daemonThread.terminate()
         self.close()
         preGuest = LoginClass(self.app)
         preGuest.exec()
@@ -331,22 +396,49 @@ class JoinClass(QDialog, join_form_class):
         super().__init__()
         self.setupUi(self)
 
+        self.setCenter()
+        self.prevPos = self.pos()
+
         self.idEdit: QLineEdit
         self.pwdEdit: QLineEdit
         self.pwdCheckEdit: QLineEdit
         self.nicknameEdit: QLineEdit
         self.joinBtn: QPushButton
         self.gotoMainBtn: QPushButton
+        self.iconlabel:QLabel	
+        self.closeBtn:QPushButton	
+        self.minimizeBtn:QPushButton
 
         self.idEdit.setText("")
         self.pwdEdit.setText("")
         self.pwdCheckEdit.setText("")
         self.nicknameEdit.setText("")
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        self.closeBtn.setIcon(QIcon("image/closeIcon.png"))	
+        self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))	
 
         self.joinBtn.clicked.connect(self.join)
+        self.closeBtn.clicked.connect(self.gotoMain)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
+        self.minimizeBtn.clicked.connect(self.minimize)
+
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
+
 
     def checkIDValid(self, edit):
         if re.search('^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$', edit) is None:
@@ -399,6 +491,9 @@ class JoinClass(QDialog, join_form_class):
 
             self.close()
 
+    def minimize(self):	
+        self.showMinimized()
+
     def gotoMain(self):
         self.close()
 
@@ -409,6 +504,9 @@ class FindClass(QDialog, find_form_class):
         super().__init__()
         self.setupUi(self)
 
+        self.setCenter()
+        self.prevPos = self.pos()
+
         self.findIdFromNicknameEdit: QLineEdit
         self.findPwFromIDEdit: QLineEdit
         self.findPwFromNicknameEdit: QLineEdit
@@ -416,12 +514,35 @@ class FindClass(QDialog, find_form_class):
         self.findIDBtn: QPushButton
         self.findPWBtn: QPushButton
         self.gotoMainBtn: QPushButton
+        self.iconlabel:QLabel
+        self.closeBtn:QPushButton	
+        self.minimizeBtn:QPushButton	
 
-        self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+        self.closeBtn.setIcon(QIcon("image/closeIcon.png"))	
+        self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.findIDBtn.clicked.connect(self.findIDFunc)
         self.findPWBtn.clicked.connect(self.findPWFunc)
+        self.closeBtn.clicked.connect(self.gotoMain)
+        self.minimizeBtn.clicked.connect(self.minimize)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
+
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
 
     def findIDFunc(self):
         QMessageBox.setStyleSheet(
@@ -457,6 +578,9 @@ class FindClass(QDialog, find_form_class):
                 QMessageBox.information(
                 self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
+
+    def minimize(self):	
+        self.showMinimized()
 
     def gotoMain(self):
         self.close()

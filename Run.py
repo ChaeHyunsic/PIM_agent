@@ -51,7 +51,6 @@ def runGuest(flag):
     else:
         return False
 
-
 def runMem(flag, nickname):
     check = 0
     srcPath = getSrcPath()

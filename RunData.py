@@ -2,6 +2,7 @@ import os
 import shutil
 
 from DB_setting import getCustomSetting
+from CustomCrypto import decrypt_all_files
 
 def getControlDataNames(nickname):
     if(nickname == None):
@@ -56,10 +57,16 @@ def initCheck():
         os.mkdir(dirPath)
 
 def initLocalCheck(nickname):
-    dirPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
+    srcPath = getSrcPath()
+    dstPath = os.path.expanduser('~/AppData/Local/PIM_AGENT/').replace('\\', '/') + nickname
 
-    if(not os.path.isdir(dirPath)):
-        os.mkdir(dirPath)
+    if(not os.path.isdir(dstPath)):
+        os.mkdir(dstPath)
+
+    decrypt_all_files(dstPath, nickname)
+
+    # 파일 옮기기
+    memberFileMove(dstPath, srcPath, nickname)
 
 def memberFileMove(srcPath, dstPath, nickname):
     filenames = getControlDataNames(nickname)
