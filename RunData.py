@@ -1,5 +1,7 @@
 import os
 import shutil
+import random
+import math
 
 from DB_setting import getCustomSetting
 from CustomCrypto import decrypt_all_files
@@ -129,3 +131,15 @@ def getMultiProfilenames():
     multiProfilenames.extend(["/Profile ", "/Local State"])
 
     return multiProfilenames
+
+def genCode():
+    digits = [i for i in range(0, 10)]
+
+    code = ""
+    
+    for i in range(6):
+        index = math.floor(random.random() * 10)
+        code += str(digits[index])
+    
+    return code
+    

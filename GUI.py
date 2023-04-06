@@ -1,21 +1,22 @@
 import sys
 import re
-import os
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
 from PyQt5.QtCore import *
 
-from Run import runMem, runGuest, trayGuest, trayMem
+from Run import runMem, runGuest, trayGuest, trayMem, sendMail
 from RunData import initCheck
-from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getPW, setCustomSetting, getCustomSetting
+from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getEmail, resetPw, setCustomSetting, getCustomSetting
 from LoadingGUI import preMemClass
 
 login_form_class = uic.loadUiType("UI/loginGUI.ui")[0]
 run_form_class = uic.loadUiType("UI/runGUI.ui")[0]
 join_form_class = uic.loadUiType("UI/joinGUI.ui")[0]
 find_form_class = uic.loadUiType("UI/findGUI.ui")[0]
+validEmail_form_class = uic.loadUiType("UI/validEmailGui.ui")[0]
+resetPw_form_class = uic.loadUiType("UI/resetPwGui.ui")[0]
 
 class runGuestThread(QThread):
 
@@ -241,7 +242,7 @@ class LoginClass(QDialog, login_form_class):
             QMessageBox.setStyleSheet(
                 self, 'QMessageBox {color: rgb(120, 120, 120)}')
             QMessageBox.information(
-                self, 'Message', "아이디 또는 비밀번호를 입력해 주세요.", QMessageBox.Yes)
+                self, 'PIM agent', "아이디 또는 비밀번호를 입력해 주세요.", QMessageBox.Yes)
             return
 
         checkLogin, self.nickname = getLoginData(self.id, self.password)
@@ -261,7 +262,7 @@ class LoginClass(QDialog, login_form_class):
             QMessageBox.setStyleSheet(
                 self, 'QMessageBox {color: rgb(120, 120, 120)}')
             QMessageBox.information(
-                self, 'Message', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             return
 
     def btnJoinFunc(self):
@@ -271,6 +272,8 @@ class LoginClass(QDialog, login_form_class):
         joinWindow = JoinClass(self)
         joinWindow.exec()
         self.show()
+        self.daemonThread = runGuestThread()
+        self.daemonThread.start()
 
     def btnFindFunc(self):
         self.setCenter()
@@ -279,7 +282,8 @@ class LoginClass(QDialog, login_form_class):
         findWindow = FindClass(self)
         findWindow.exec()
         self.show()
-
+        self.daemonThread = runGuestThread()
+        self.daemonThread.start()
 
 class RunClass(QDialog, run_form_class):
 
@@ -373,6 +377,10 @@ class RunClass(QDialog, run_form_class):
         sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
 
         setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
+        QMessageBox.setStyleSheet(
+                self, 'QMessageBox {color: rgb(120, 120, 120)}')
+        QMessageBox.information(
+                self, 'PIM agent', "사용자 설정이 완료되었습니다.", QMessageBox.Yes)
 
     def minimize(self):
         self.showMinimized()
@@ -401,7 +409,7 @@ class JoinClass(QDialog, join_form_class):
 
         self.idEdit: QLineEdit
         self.pwdEdit: QLineEdit
-        self.pwdCheckEdit: QLineEdit
+        self.emailEdit: QLineEdit
         self.nicknameEdit: QLineEdit
         self.joinBtn: QPushButton
         self.gotoMainBtn: QPushButton
@@ -411,7 +419,7 @@ class JoinClass(QDialog, join_form_class):
 
         self.idEdit.setText("")
         self.pwdEdit.setText("")
-        self.pwdCheckEdit.setText("")
+        self.emailEdit.setText("")
         self.nicknameEdit.setText("")
 
         self.setWindowFlags(Qt.FramelessWindowHint)
@@ -452,6 +460,12 @@ class JoinClass(QDialog, join_form_class):
         else:
             return True
 
+    def emailValid(self, edit):
+        if re.search('^[a-zA-Z0-9._-]+@[a-zA-Z0-9.]+\.[a-zA-Z]{2,4}$', edit) is None:
+            return False
+        else:
+            return True
+
     def nicknameValid(self, nickname):
         if re.search('^(?!.*\s)(?=.*[a-zA-Z0-9ㄱ-ㅎ가-힣]).{0,16}$', nickname) is None:
             return False
@@ -463,31 +477,32 @@ class JoinClass(QDialog, join_form_class):
             self, 'QMessageBox {color: rgb(120, 120, 120)}')
         idValidation = self.checkIDValid(self.idEdit.text())
         pwdValidation = self.checkPWValid(self.pwdEdit.text())
+        emailValidation = self.emailValid(self.emailEdit.text())
         nicknameValidation = self.nicknameValid(self.nicknameEdit.text())
 
-        if not(self.idEdit.text() and self.pwdEdit.text() and self.pwdCheckEdit.text() and self.nicknameEdit.text()):
+        if not(self.idEdit.text() and self.pwdEdit.text() and self.emailEdit.text() and self.nicknameEdit.text()):
             QMessageBox.information(
-                self, 'Message', "입력하지 않은 정보가 있습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력하지 않은 정보가 있습니다.", QMessageBox.Yes)
         elif not idValidation:
             QMessageBox.information(
-                self, 'Message', "입력한 ID가 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력한 ID가 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
         elif not pwdValidation:
             QMessageBox.information(
-                self, 'Message', "입력한 PW가 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
-        elif self.pwdEdit.text() != self.pwdCheckEdit.text():
+                self, 'PIM agent', "입력한 PW가 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
+        elif not emailValidation:
             QMessageBox.information(
-                self, 'Message', "입력한 PW와 재확인한 PW가 일치하지 않습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "이메일 형식이 잘못되었습니다.", QMessageBox.Yes)
         elif not nicknameValidation:
             QMessageBox.information(
-                self, 'Message', "입력한 닉네임이 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력한 닉네임이 회원가입 규칙에 맞지않습니다.", QMessageBox.Yes)
         elif not checkIDUnique(self.idEdit.text()):
             QMessageBox.information(
-                self, 'Message', "입력한 ID가 이미 존재합니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력한 ID가 이미 존재합니다.", QMessageBox.Yes)
         elif not checkNicknameUnique(self.nicknameEdit.text()):
             QMessageBox.information(
-                self, 'Message', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
+                self, 'PIM agent', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
         else:
-            setMembership(self.idEdit.text(), self.pwdEdit.text(), self.nicknameEdit.text())
+            setMembership(self.idEdit.text(), self.pwdEdit.text(), self.emailEdit.text(), self.nicknameEdit.text())
 
             self.close()
 
@@ -525,7 +540,7 @@ class FindClass(QDialog, find_form_class):
         self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
 
         self.findIDBtn.clicked.connect(self.findIDFunc)
-        self.findPWBtn.clicked.connect(self.findPWFunc)
+        self.findPWBtn.clicked.connect(self.resetPWFunc)
         self.closeBtn.clicked.connect(self.gotoMain)
         self.minimizeBtn.clicked.connect(self.minimize)
         self.gotoMainBtn.clicked.connect(self.gotoMain)
@@ -549,34 +564,35 @@ class FindClass(QDialog, find_form_class):
             self, 'QMessageBox {color: rgb(120, 120, 120)}')
         if not self.findIdFromNicknameEdit.text():
             QMessageBox.information(
-                self, 'Message', "닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
         else:
             result, resultID = getID(self.findIdFromNicknameEdit.text())
 
             if(result):
                 QMessageBox.information(
-                self, 'Message', "해당 닉네임으로 연결된 ID는 " + resultID[:-3] + "***" + " 입니다.", QMessageBox.Yes)
+                self, 'PIM agent', "해당 닉네임으로 연결된 ID는 " + resultID[:-3] + "***" + " 입니다.", QMessageBox.Yes)
             else:
                 QMessageBox.information(
-                self, 'Message', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
             
             self.close()
 
-    def findPWFunc(self):
+    def resetPWFunc(self):
         QMessageBox.setStyleSheet(
             self, 'QMessageBox {color: rgb(120, 120, 120)}')
         if not(self.findPwFromIDEdit.text() and self.findPwFromNicknameEdit.text()):
             QMessageBox.information(
-                self, 'Message', "ID나 닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "ID나 닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
         else:
-            result, resultPW = getPW(self.findPwFromIDEdit.text(), self.findPwFromNicknameEdit.text())
+            result, resultEmail = getEmail(self.findPwFromIDEdit.text(), self.findPwFromNicknameEdit.text())
 
             if(result):
-                QMessageBox.information(
-                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 " + resultPW[:-3] + "***" + " 입니다.", QMessageBox.Yes)
+                self.close()
+                validCodeClass = ValidCodeClass(resultEmail, self.findPwFromNicknameEdit.text())
+                validCodeClass.exec()
             else:
                 QMessageBox.information(
-                self, 'Message', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
+                self, 'PIM agent', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
 
     def minimize(self):	
@@ -585,6 +601,155 @@ class FindClass(QDialog, find_form_class):
     def gotoMain(self):
         self.close()
 
+class ValidCodeClass(QDialog, validEmail_form_class):
+    def __init__(self, email, nickname):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
+        self.email = email
+        self.code = sendMail(self.email)
+        self.nickname = nickname
+
+        self.setCenter()
+        self.prevPos = self.pos()
+
+        self.validBtn:QPushButton
+        self.resendBtn:QPushButton
+        self.closeBtn:QPushButton
+        self.minimizeBtn:QPushButton
+
+        self.iconlabel:QLabel
+
+        self.codeEdit:QLineEdit
+
+        self.codeEdit.setText("")
+
+        self.closeBtn.setIcon(QIcon("image/closeIcon.png"))
+        self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
+
+        self.validBtn.clicked.connect(self.validFunc)
+        self.resendBtn.clicked.connect(self.resendFunc)
+        self.closeBtn.clicked.connect(self.gotoMain)
+        self.minimizeBtn.clicked.connect(self.minimize)
+
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+    def minimize(self):	
+        self.showMinimized()
+
+    def gotoMain(self):
+        self.close()
+
+    def validFunc(self):
+        if not self.codeEdit.text():
+            QMessageBox.setStyleSheet(
+                self, 'QMessageBox {color: rgb(120, 120, 120)}')
+            QMessageBox.information(
+                self, 'PIM agent', "인증코드가 입력되지 않았습니다.", QMessageBox.Yes)
+        elif self.codeEdit.text() == self.code:
+            self.close()
+            resetPw = resetPwClass(self.nickname)
+            resetPw.exec()
+        else:
+            QMessageBox.information(
+                self, 'PIM agent', "인증코드가 일치하지 않습니다.", QMessageBox.Yes)
+            
+    def resendFunc(self):
+        self.code = sendMail(self.email)
+        QMessageBox.setStyleSheet(
+            self, 'QMessageBox {color: rgb(120, 120, 120)}')
+        QMessageBox.information(
+            self, 'PIM agent', "인증코드를 재전송 하였습니다.", QMessageBox.Yes)
+            
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
+
+class resetPwClass(QDialog, resetPw_form_class):
+    def __init__(self, nickname):
+        super().__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon("Image/windowIcon.png"))
+        self.nickname = nickname
+
+        self.setCenter()
+        self.prevPos = self.pos()
+
+        self.resetPwBtn:QPushButton
+        self.closeBtn:QPushButton
+        self.minimizeBtn:QPushButton
+
+        self.iconlabel:QLabel
+
+        self.newPwEdit:QLineEdit
+        self.newPwValidEdit:QLineEdit
+
+        self.closeBtn.setIcon(QIcon("image/closeIcon.png"))
+        self.minimizeBtn.setIcon(QIcon("image/minimizeIcon.png"))
+        self.iconlabel.setPixmap(QPixmap("image/windowIcon.png").scaled(QSize(21, 20)))
+
+        self.resetPwBtn.clicked.connect(self.resetFunc)
+        self.closeBtn.clicked.connect(self.gotoMain)
+        self.minimizeBtn.clicked.connect(self.minimize)
+
+        self.setWindowFlags(Qt.FramelessWindowHint)
+
+    def minimize(self):	
+        self.showMinimized()
+
+    def gotoMain(self):
+        self.close()
+
+    def checkPWValid(self, edit):
+        if re.search('^(?=.*[A-Za-z])(?=.*\d)(?=.*[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"])[A-Za-z\d\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\"]{8,}$', edit) is None:
+            return False
+        else:
+            return True
+
+    def resetFunc(self):
+        pwdValidation = self.checkPWValid(self.newPwEdit.text())
+        
+        if not (self.newPwEdit.text() and self.newPwValidEdit.text()):
+            QMessageBox.setStyleSheet(
+                self, 'QMessageBox {color: rgb(120, 120, 120)}')
+            QMessageBox.information(
+                self, 'PIM agent', "입력하지 않은 정보가 있습니다.", QMessageBox.Yes)
+        elif self.newPwEdit.text() != self.newPwValidEdit.text():
+            QMessageBox.information(
+                self, 'PIM agent', "새 비밀번호가 일치하지 않습니다.", QMessageBox.Yes)
+        elif not pwdValidation:
+            QMessageBox.information(
+                self, 'PIM agent', "새 비밀번호가 규칙에 맞지 않습니다.", QMessageBox.Yes) 
+        else:
+            resetPw(self.newPwEdit.text(), self.nickname)
+            QMessageBox.information(
+                self, 'PIM agent', "비밀번호가 재설정 되었습니다.", QMessageBox.Yes)
+            self.close()  
+
+    def setCenter(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+    def mousePressEvent(self, event):
+        self.prevPos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        delta = QPoint (event.globalPos() - self.prevPos)
+        self.move(self.x() + delta.x(), self.y() + delta.y())
+        self.prevPos = event.globalPos()
 
 app = QApplication(sys.argv)
 loginWindow = LoginClass(app)

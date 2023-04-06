@@ -4,10 +4,14 @@ import time
 import webbrowser
 from PyQt5.QtWidgets import QSystemTrayIcon
 from ctypes import Structure, windll, c_uint, sizeof, byref
+import smtplib
+from email.message import EmailMessage
+from email.utils import formataddr
 
 from CustomCrypto import encrypt_all_files, decrypt_all_files
-from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove
+from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove, genCode
 from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass, focusOnThread
+from DB_setting import getAgentEmail
 
 #input 여부 확인 -> input 없을시 타이머 시작 및 반환
 class LASTINPUTINFO(Structure):
@@ -193,3 +197,32 @@ def trayMem(flag, nickname):
             return False
     elif (check==0 and flag == True):
         return True
+
+def sendMail(address):
+
+    code = genCode()
+
+    # 이메일 주소와 암호 입력
+    MY_ADDRESS, MY_PASSWORD = getAgentEmail()
+
+    # 수신자 이메일 주소 입력
+    TO_ADDRESS = address
+
+    # 이메일 구성
+    message = EmailMessage()
+
+    message['From'] = formataddr(('PIM AGENT', MY_ADDRESS))
+    message['To'] = TO_ADDRESS
+    message['Subject'] = '[PIM AGENT] 비밀번호 재설정을 하기위한 메시지 입니다.'
+
+    # 이메일 내용 입력
+    body = '비밀번호를 재설정 하기 위해\n해당 6자리 코드({})를 입력해 주세요'.format(code)
+    message.set_content(body)
+
+    # SMTP 서버 설정 및 이메일 보내기
+    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+        smtp.starttls()
+        smtp.login(MY_ADDRESS, MY_PASSWORD)
+        smtp.send_message(message)
+
+    return code
