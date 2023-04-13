@@ -251,25 +251,38 @@ class LoginClass(QDialog, login_form_class):
                 self, 'PIM agent', "아이디 또는 비밀번호를 입력해 주세요.", QMessageBox.Yes)
             return
 
-        checkLogin, self.nickname = getLoginData(self.id, self.password)
-        if(checkLogin):
-            self.close()
-            self.daemonThread.terminate()
+        try:
+            checkLogin, self.nickname = getLoginData(self.id, self.password)
+            if(checkLogin):
+                self.close()
+                self.daemonThread.terminate()
 
-            preMemThread = preMemClass(self.nickname)
-            preMemThread.exec()
+                preMemThread = preMemClass(self.nickname)
+                preMemThread.exec()
 
-            mainWindow = RunClass(self.app)
-            mainWindow.setNickname(self.nickname)
-            mainWindow.setThread()
+                mainWindow = RunClass(self.app)
+                mainWindow.setNickname(self.nickname)
+                mainWindow.setThread()
 
-            mainWindow.exec()
-        else:
-            QMessageBox.setStyleSheet(
-                self, 'QMessageBox {color: rgb(120, 120, 120)}')
-            QMessageBox.information(
-                self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
-            return
+                mainWindow.exec()
+            else:
+                QMessageBox.setStyleSheet(
+                    self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                QMessageBox.information(
+                    self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
+                return
+        except Exception as e:
+            # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
+            if str(e) ==  '(2003, \"Can\'t connect to MySQL server on \'3.34.143.40\' (timed out)\")':
+                QMessageBox.setStyleSheet(
+                        self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                QMessageBox.information(
+                    self, 'PIM agent', "원격 네트워크 환경을 확인해주세요.", QMessageBox.Yes)
+            else:
+                QMessageBox.setStyleSheet(
+                        self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                QMessageBox.information(
+                    self, 'PIM agent', "로컬 네트워크 환경을 확인해주세요.", QMessageBox.Yes)
 
     def btnJoinFunc(self):
         self.setCenter()
