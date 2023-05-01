@@ -1,6 +1,7 @@
 import sys
 import re
 import os
+import time
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5 import uic
@@ -44,16 +45,17 @@ class runMemThread(QThread):
     encrypt_signal = pyqtSignal(bool)
 
     # 초기화 메서드 구현
-    def __init__(self, nickname):
+    def __init__(self, nickname, member_setting):
         super().__init__()
         self.breakPoint = False
         self.nickname = nickname
+        self.member_setting = member_setting
         self.flag = False
 
     # 쓰레드로 동작시킬 함수 내용 구현
     def run(self):
         while(not self.breakPoint):
-            self.flag = runMem(self.flag, self.nickname)
+            self.flag = runMem(self.flag, self.nickname, self.member_setting)
             if self.flag == True:
                 self.encrypt_signal.emit(self.flag)
 
@@ -79,16 +81,17 @@ class trayGuestThread(QThread):
 class trayMemThread(QThread):
     encrypt_signal = pyqtSignal(bool)
 
-    def __init__(self, nickname, parent=None):
+    def __init__(self, nickname, member_setting, parent=None):
         super().__init__()
         self.breakPoint = False
         self.nickname = nickname
+        self.member_setting = member_setting
         self.flag = False
 
     def run(self):
 
         while(not self.breakPoint):
-            self.flag = trayMem(self.flag, self.nickname)
+            self.flag = trayMem(self.flag, self.nickname, self.member_setting)
             if self.flag == True:
                 self.encrypt_signal.emit(self.flag)
 
@@ -96,10 +99,11 @@ class trayMemThread(QThread):
 
 
 class TrayIcon(QSystemTrayIcon):
-    def __init__(self, icon, parent, seperator, nickname):
+    def __init__(self, icon, parent, seperator, nickname, member_setting):
         self.icon = icon
         self.seperator = seperator
         self.nickname = nickname
+        self.member_setting = member_setting
         QSystemTrayIcon.__init__(self, self.icon, parent)
         self.setToolTip("PIM agent")
 
@@ -126,7 +130,7 @@ class TrayIcon(QSystemTrayIcon):
             self.th.start()
         else:
             self.logoutAction.setEnabled(True)
-            self.th = trayMemThread(self.nickname)
+            self.th = trayMemThread(self.nickname, self.member_setting)
             self.th.start()
             self.th.encrypt_signal.connect(self.logout)
 
@@ -143,7 +147,7 @@ class TrayIcon(QSystemTrayIcon):
                 preGuest.exec()
             else:
                 mainWindow = RunClass(self)
-                mainWindow.setNickname(self.nickname)
+                mainWindow.setValue(self.nickname, self.member_setting)
                 mainWindow.setThread()
                 mainWindow.exec()
 
@@ -155,7 +159,7 @@ class TrayIcon(QSystemTrayIcon):
             preGuest.exec()
         else:
             mainWindow = RunClass(self)
-            mainWindow.setNickname(self.nickname)
+            mainWindow.setValue(self.nickname)
             mainWindow.setThread()
             mainWindow.exec()
 
@@ -237,7 +241,7 @@ class LoginClass(QDialog, login_form_class):
         self.daemonThread.terminate()
         self.hide()
         trayicon = TrayIcon(
-            QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "guest", "guest")
+            QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "guest", "guest", None)
         trayicon.show()
 
     def btnLoginFunc(self):
@@ -253,24 +257,20 @@ class LoginClass(QDialog, login_form_class):
 
         try:
             checkLogin, self.nickname = getLoginData(self.id, self.password)
+            member_setting = getCustomSetting(self.nickname)
+
             if(checkLogin):
                 self.close()
                 self.daemonThread.terminate()
 
-                preMemThread = preMemClass(self.nickname)
+                preMemThread = preMemClass(self.nickname, member_setting)
                 preMemThread.exec()
 
                 mainWindow = RunClass(self.app)
-                mainWindow.setNickname(self.nickname)
+                mainWindow.setValue(self.nickname, member_setting)
                 mainWindow.setThread()
 
                 mainWindow.exec()
-            else:
-                QMessageBox.setStyleSheet(
-                    self, 'QMessageBox {color: rgb(120, 120, 120)}')
-                QMessageBox.information(
-                    self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
-                return
         except Exception as e:
             # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
             if str(e) ==  '(2003, \"Can\'t connect to MySQL server on \'3.34.143.40\' (timed out)\")':
@@ -278,6 +278,11 @@ class LoginClass(QDialog, login_form_class):
                         self, 'QMessageBox {color: rgb(120, 120, 120)}')
                 QMessageBox.information(
                     self, 'PIM agent', "원격 네트워크 환경을 확인해주세요.", QMessageBox.Yes)
+            elif str(e) == 'tuple index out of range':
+                QMessageBox.setStyleSheet(
+                    self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                QMessageBox.information(
+                    self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             else:
                 QMessageBox.setStyleSheet(
                         self, 'QMessageBox {color: rgb(120, 120, 120)}')
@@ -316,6 +321,8 @@ class RunClass(QDialog, run_form_class):
         self.prevPos = self.pos()
 
         self.nickname = ""
+        self.member_setting = None
+
         self.titleLabel: QLabel
         self.iconlabel: QLabel
 
@@ -362,30 +369,30 @@ class RunClass(QDialog, run_form_class):
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.prevPos = event.globalPos()
 
-    def setNickname(self, nickname):
+    def setValue(self, nickname, member_setting):
         self.nickname = nickname
+        self.member_setting = member_setting
+        
         self.titleLabel.setText(nickname + " 님")
 
-        checkRetval = getCustomSetting(self.nickname)
-
-        if checkRetval[0] == 0:
+        if member_setting[0] == 0:
             self.bookmarkCheckBox.toggle()
-        if checkRetval[1] == 0:
+        if member_setting[1] == 0:
             self.visitCheckBox.toggle()
-        if checkRetval[2] == 0:
+        if member_setting[2] == 0:
             self.downloadCheckBox.toggle()
-        if checkRetval[3] == 0:
+        if member_setting[3] == 0:
             self.autoFormCheckBox.toggle()
-        if checkRetval[4] == 0:
+        if member_setting[4] == 0:
             self.cookieCheckBox.toggle()
-        if checkRetval[5] == 0:
+        if member_setting[5] == 0:
             self.cacheCheckBox.toggle()
-        if checkRetval[6] == 0:
+        if member_setting[6] == 0:
             self.sessionCheckBox.toggle()
 
     def setThread(self):
         # start 메소드 호출 -> 자동으로 run 메소드 호출
-        self.daemonThread = runMemThread(self.nickname)
+        self.daemonThread = runMemThread(self.nickname, self.member_setting)
         self.daemonThread.start()
         self.daemonThread.encrypt_signal.connect(self.logout)
 
@@ -398,12 +405,16 @@ class RunClass(QDialog, run_form_class):
         cacheCheck = 1 if self.cacheCheckBox.isChecked() is True else 0
         sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
 
-        setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck,
-                         cookieCheck, cacheCheck, sessionCheck, self.nickname)
-        QMessageBox.setStyleSheet(
-            self, 'QMessageBox {color: rgb(120, 120, 120)}')
-        QMessageBox.information(
-            self, 'PIM agent', "사용자 설정이 완료되었습니다.", QMessageBox.Yes)
+        setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
+
+        self.member_setting = (bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck)
+
+        self.daemonThread.terminate() 
+        self.daemonThread = runMemThread(self.nickname, self.member_setting)
+        self.daemonThread.start()
+
+        QMessageBox.setStyleSheet(self, 'QMessageBox {color: rgb(120, 120, 120)}')
+        QMessageBox.information(self, 'PIM agent', "사용자 설정이 완료되었습니다.", QMessageBox.Yes)
 
     def minimize(self):
         self.showMinimized()
@@ -412,7 +423,7 @@ class RunClass(QDialog, run_form_class):
         self.hide()
         self.daemonThread.terminate()
         trayicon = TrayIcon(
-            QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "member", self.nickname)
+            QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "member", self.nickname, self.member_setting)
         trayicon.show()
 
     def logout(self):
@@ -526,8 +537,7 @@ class JoinClass(QDialog, join_form_class):
             QMessageBox.information(
                 self, 'PIM agent', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
         else:
-            setMembership(self.idEdit.text(), self.pwdEdit.text(),
-                          self.emailEdit.text(), self.nicknameEdit.text())
+            setMembership(self.idEdit.text(), self.pwdEdit.text(), self.emailEdit.text(), self.nicknameEdit.text())
 
             self.close()
 
@@ -636,6 +646,7 @@ class ValidCodeClass(QDialog, validEmail_form_class):
         self.setupUi(self)
         self.setWindowIcon(QIcon(BASE_DIR + r"\Image\windowIcon.png"))
         self.email = email
+        self.send_time = time.time()
         self.code = sendMail(self.email)
         self.nickname = nickname
 
@@ -677,6 +688,9 @@ class ValidCodeClass(QDialog, validEmail_form_class):
                 self, 'QMessageBox {color: rgb(120, 120, 120)}')
             QMessageBox.information(
                 self, 'PIM agent', "인증코드가 입력되지 않았습니다.", QMessageBox.Yes)
+        elif time.time() - self.send_time > 600:
+            QMessageBox.information(
+                self, 'PIM agent', "인증코드가 만료되었습니다. 재시도 바랍니다.", QMessageBox.Yes)
         elif self.codeEdit.text() == self.code:
             self.close()
             resetPw = resetPwClass(self.nickname)
@@ -686,6 +700,7 @@ class ValidCodeClass(QDialog, validEmail_form_class):
                 self, 'PIM agent', "인증코드가 일치하지 않습니다.", QMessageBox.Yes)
 
     def resendFunc(self):
+        self.send_time = time.time()
         self.code = sendMail(self.email)
         QMessageBox.setStyleSheet(
             self, 'QMessageBox {color: rgb(120, 120, 120)}')

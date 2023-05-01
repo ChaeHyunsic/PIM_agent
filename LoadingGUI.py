@@ -55,13 +55,14 @@ class preGuestThread(QThread):
 class preMemThread(QThread):
     preMem_signal = pyqtSignal()
 
-    def __init__(self, nickname):
+    def __init__(self, nickname, member_setting):
         super().__init__()
         self.nickname = nickname
+        self.member_setting = member_setting
 
     def run(self):
         os.system('taskkill /f /im chrome.exe')
-        initLocalCheck(self.nickname)
+        initLocalCheck(self.nickname, self.member_setting)
         time.sleep(1)
         self.preMem_signal.emit()
 
@@ -208,12 +209,13 @@ class preGuestClass(QDialog, preGuest_form_class):
 
 
 class preMemClass(QDialog, preMem_form_class):
-    def __init__(self, nickname):
+    def __init__(self, nickname, member_setting):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QIcon(BASE_DIR + r"\Image\windowIcon.png"))
         self.preMemGIF: QLabel
         self.nickname = nickname
+        self.member_setting = member_setting
 
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
                             Qt.FramelessWindowHint)
@@ -227,7 +229,7 @@ class preMemClass(QDialog, preMem_form_class):
         self.preMemGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
 
-        self.preMemTh = preMemThread(self.nickname)
+        self.preMemTh = preMemThread(self.nickname, self.member_setting)
         self.focusOnTh = focusOnThread()
 
         self.preMemTh.preMem_signal.connect(self.doneProc)

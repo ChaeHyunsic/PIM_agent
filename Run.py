@@ -55,7 +55,7 @@ def runGuest(flag):
     else:
         return False
 
-def runMem(flag, nickname):
+def runMem(flag, nickname, member_setting):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
@@ -69,7 +69,7 @@ def runMem(flag, nickname):
 
     if(check == 1 and flag == False):
         # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname, member_setting)
 
         return False
     elif(check == 1 and flag == True):
@@ -79,14 +79,14 @@ def runMem(flag, nickname):
         decryptThread.exec()
 
         # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname, member_setting)
 
         webbrowser.open("https://google.com")
 
         return False
     elif (check == 0 and flag == False):
         # 파일 옮기기
-        memberFileMove(srcPath, dstPath, nickname)
+        memberFileMove(srcPath, dstPath, nickname, member_setting)
 
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
@@ -133,7 +133,7 @@ def trayGuest(flag):
     else:
         return False
 
-def trayMem(flag, nickname):
+def trayMem(flag, nickname, member_setting):
     check = 0
     srcPath = getSrcPath()
     dstPath = getDstPath(nickname)
@@ -147,7 +147,7 @@ def trayMem(flag, nickname):
 
     if(check == 1 and flag == False):
         # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname, member_setting)
 
         return False
 
@@ -169,14 +169,14 @@ def trayMem(flag, nickname):
         emptyTrayicon.hide()
         
         # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname)
+        memberFileMove(dstPath, srcPath, nickname, member_setting)
 
         webbrowser.open("https://google.com")
 
         return False
     elif (check == 0 and flag == False):
         # 파일 옮기기
-        memberFileMove(srcPath, dstPath, nickname)
+        memberFileMove(srcPath, dstPath, nickname, member_setting)
 
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
