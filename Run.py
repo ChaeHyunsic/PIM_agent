@@ -1,16 +1,16 @@
-import os
 import psutil
 import time
-import webbrowser
+import keyboard
+import smtplib
+
 from PyQt5.QtWidgets import QSystemTrayIcon
 from ctypes import Structure, windll, c_uint, sizeof, byref
-import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 
-from CustomCrypto import encrypt_all_files, decrypt_all_files
+from CustomCrypto import encrypt_all_files
 from RunData import getSrcPath, getDstPath, memberFileMove, guestFileRemove, genCode
-from LoadingGUI import DecryptLoadingClass, EncryptLoadingClass, preGuestClass, focusOnThread
+from LoadingGUI import focusOnThread
 from DB_setting import getAgentEmail
 
 #input 여부 확인 -> input 없을시 타이머 시작 및 반환
@@ -29,9 +29,33 @@ def get_idle_duration():
     return millis / 1000.0
 
 
-def runGuest(flag):
+def runGuest(var, acc):
     check = 0
-    srcPath = getSrcPath()
+    prev = var
+
+    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
+        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
+
+        if ps_name == "chrome.exe":
+            check = 1
+            break
+
+    var = check
+    if acc < 8: #이상치 조정(최대 9)
+        acc += prev + var
+
+    if(check == 0  and acc > 0):
+        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
+            acc = 0
+
+            return var, acc, True
+
+        return var, acc, False
+    else:
+        return var, acc, False
+
+def runMem(flag):
+    check = 0
 
     for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
         ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
@@ -41,62 +65,13 @@ def runGuest(flag):
             break
 
     if(check == 0 and flag == False):
-        guestFileRemove(srcPath, 0)
-
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
-            preGuestThread = preGuestClass(srcPath)
-            preGuestThread.exec()
-
             return True
-
         return False
-    elif (check == 0 and flag == True):
-        return flag
+    elif(check == 0 and flag == True):
+        return True
     else:
         return False
-
-def runMem(flag, nickname, member_setting):
-    check = 0
-    srcPath = getSrcPath()
-    dstPath = getDstPath(nickname)
-
-    for proc in psutil.process_iter():    # 실행중인 프로세스를 순차적으로 검색
-        ps_name = proc.name()               # 프로세스 이름을 ps_name에 할당
-
-        if ps_name == "chrome.exe":
-            check = 1
-            break
-
-    if(check == 1 and flag == False):
-        # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname, member_setting)
-
-        return False
-    elif(check == 1 and flag == True):
-        os.system('taskkill /f /im chrome.exe')
-
-        decryptThread = DecryptLoadingClass(dstPath, nickname)
-        decryptThread.exec()
-
-        # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname, member_setting)
-
-        webbrowser.open("https://google.com")
-
-        return False
-    elif (check == 0 and flag == False):
-        # 파일 옮기기
-        memberFileMove(srcPath, dstPath, nickname, member_setting)
-
-        if((int)(get_idle_duration()) >= 60):   # 타이머 설정
-            encryptThread = EncryptLoadingClass(srcPath, dstPath, nickname)
-            encryptThread.exec()
-
-            return True
-        else:
-            return False
-    elif (check==0 and flag == True):
-        return True
 
 def trayGuest(flag):
     check = 0
@@ -110,8 +85,6 @@ def trayGuest(flag):
             break
 
     if(check == 0 and flag == False):
-        guestFileRemove(srcPath, 0)
-
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
             emptyTrayicon = QSystemTrayIcon()
             emptyTrayicon.setVisible(False)
@@ -120,10 +93,12 @@ def trayGuest(flag):
             focusThread = focusOnThread()
             focusThread.start()
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보 삭제 중...", 1, 1000)
+            guestFileRemove(srcPath, 0)
             guestFileRemove(srcPath, 1)
             time.sleep(2)
-            focusThread.stop()
+            focusThread.terminate()
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
+            keyboard.unhook_all()
             
             return True
 
@@ -132,6 +107,23 @@ def trayGuest(flag):
         return flag
     else:
         return False
+
+def encryptInTrayIcon(srcPath, dstPath, nickname, member_setting):
+    emptyTrayicon = QSystemTrayIcon()
+    emptyTrayicon.setVisible(False)
+    emptyTrayicon.show()
+    
+    focusThread = focusOnThread()
+    focusThread.start()
+
+    QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화 진행 중...", 1, 1000)
+    memberFileMove(srcPath, dstPath, nickname, member_setting) # 파일 옮기기
+    encrypt_all_files(dstPath,nickname)
+    QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화가 완료되었습니다.", 1, 1000)
+
+    focusThread.terminate()
+    emptyTrayicon.hide()
+    keyboard.unhook_all()
 
 def trayMem(flag, nickname, member_setting):
     check = 0
@@ -145,58 +137,15 @@ def trayMem(flag, nickname, member_setting):
             check = 1
             break
 
-    if(check == 1 and flag == False):
-        # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname, member_setting)
-
-        return False
-
-    elif(check == 1 and flag == True):
-        os.system('taskkill /f /im chrome.exe')
-
-        emptyTrayicon = QSystemTrayIcon()
-        emptyTrayicon.setVisible(False)
-        emptyTrayicon.show()
-        
-        focusThread = focusOnThread()
-        focusThread.start()
-        QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "복호화 진행 중...", 1, 1000)
-        time.sleep(1)
-        decrypt_all_files(dstPath,nickname)
-        QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "복호화가 완료되었습니다.", 1, 1000)
-        time.sleep(1)
-        focusThread.terminate()
-        emptyTrayicon.hide()
-        
-        # 파일 옮기기
-        memberFileMove(dstPath, srcPath, nickname, member_setting)
-
-        webbrowser.open("https://google.com")
-
-        return False
-    elif (check == 0 and flag == False):
-        # 파일 옮기기
-        memberFileMove(srcPath, dstPath, nickname, member_setting)
-
+    if(check == 0 and flag == False):
         if((int)(get_idle_duration()) >= 60):   # 타이머 설정
-            emptyTrayicon = QSystemTrayIcon()
-            emptyTrayicon.setVisible(False)
-            emptyTrayicon.show()
-            
-            focusThread = focusOnThread()
-            focusThread.start()
-            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화 진행 중...", 1, 1000)
-            time.sleep(1)
-            encrypt_all_files(dstPath,nickname)
-            QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화가 완료되었습니다.", 1, 1000)
-            time.sleep(1)
-            focusThread.terminate()
-            emptyTrayicon.hide()
+            encryptInTrayIcon(srcPath, dstPath, nickname, member_setting)
             return True
-        else:
-            return False
-    elif (check==0 and flag == True):
+        return False
+    elif(check == 0 and flag == True):
         return True
+    else:
+        return False
 
 def sendMail(address):
 

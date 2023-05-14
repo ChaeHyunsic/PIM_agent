@@ -2,6 +2,7 @@ import os
 import shutil
 import random
 import math
+import time
 
 from CustomCrypto import decrypt_all_files
 
@@ -81,8 +82,8 @@ def memberFileMove(srcPath, dstPath, nickname, member_setting):
                 shutil.rmtree(dstPath + filename)
             shutil.move(srcPath + filename, dstPath + filename)
 
-def memberFileRemove(srcPath, nickname):
-    filenames = getRemoveDataNames(nickname)
+def memberFileRemove(srcPath, nickname, member_setting):
+    filenames = getRemoveDataNames(nickname, member_setting)
     multiProfilePath = srcPath.replace('\\', '/')[:-8]
     multiProfilenames = getMultiProfilenames()
 
@@ -110,10 +111,10 @@ def guestFileRemove(srcPath, flag):
         filenames = getRemoveDataNames(None, None)
 
     for filename in filenames:
-        if(os.path.isfile(srcPath + filename)):
+        if(os.path.exists(srcPath + filename) and os.path.isfile(srcPath + filename)):
             os.remove(srcPath + filename)
 
-        elif(os.path.isdir(srcPath + filename)):
+        elif(os.path.exists(srcPath + filename) and os.path.isdir(srcPath + filename)):
             shutil.rmtree(srcPath + filename)
     
     i = 1
