@@ -44,7 +44,6 @@ class preGuestThread(QThread):
     def run(self):
         guestFileRemove(self.srcPath, 0)
         guestFileRemove(self.srcPath, 1)
-        time.sleep(2)
         self.preGuest_signal.emit()
 
 
@@ -59,7 +58,6 @@ class preMemThread(QThread):
     def run(self):
         os.system('taskkill /f /im chrome.exe')
         initLocalCheck(self.nickname, self.member_setting)
-        time.sleep(1)
         self.preMem_signal.emit()
 
 

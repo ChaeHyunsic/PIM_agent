@@ -25,6 +25,7 @@ find_form_class = uic.loadUiType(BASE_DIR + r'\UI\findGUI.ui')[0]
 validEmail_form_class = uic.loadUiType(BASE_DIR + r'\UI\validEmailGui.ui')[0]
 resetPw_form_class = uic.loadUiType(BASE_DIR + r'\UI\resetPwGui.ui')[0]
 
+
 class runGuestThread(QThread):
     timeout_signal = pyqtSignal()
 
@@ -96,6 +97,8 @@ class trayMemThread(QThread):
                 self.encrypt_signal.emit(self.flag)
 
 # 트레이 아이콘
+
+
 class TrayIcon(QSystemTrayIcon):
     def __init__(self, icon, parent, seperator, nickname, member_setting):
         self.icon = icon
@@ -165,14 +168,16 @@ class TrayIcon(QSystemTrayIcon):
 
     def logout(self):
         os.system('taskkill /f /im chrome.exe')
-        time.sleep(1)
+        time.sleep(0.5)
 
         self.th.terminate()
         self.setSeperator("guest")
         self.logoutAction.setEnabled(False)
 
-        memberFileMove(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting) # 파일 옮기기
-        encryptInTrayIcon(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting)
+        memberFileMove(getSrcPath(), getDstPath(self.nickname),
+                       self.nickname, self.member_setting)  # 파일 옮기기
+        encryptInTrayIcon(getSrcPath(), getDstPath(
+            self.nickname), self.nickname, self.member_setting)
 
         self.th = trayGuestThread()
         self.th.start()
@@ -192,11 +197,13 @@ class TrayIcon(QSystemTrayIcon):
         else:
             self.setVisible(False)
             os.system('taskkill /f /im chrome.exe')
-            time.sleep(1)
+            time.sleep(0.5)
 
             self.th.terminate()
-            memberFileMove(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting) # 파일 옮기기
-            encryptInTrayIcon(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting)
+            memberFileMove(getSrcPath(), getDstPath(self.nickname),
+                           self.nickname, self.member_setting)  # 파일 옮기기
+            encryptInTrayIcon(getSrcPath(), getDstPath(
+                self.nickname), self.nickname, self.member_setting)
             QCoreApplication.instance().quit()
 
 
@@ -228,6 +235,8 @@ class initClass(QDialog, init_form_class):
         preGuest.exec()
 
 # 로그인 gui
+
+
 class LoginClass(QDialog, login_form_class):
 
     def __init__(self, app):
@@ -302,7 +311,8 @@ class LoginClass(QDialog, login_form_class):
     def runBackground(self):
         self.daemonThread.terminate()
         self.hide()
-        trayicon = TrayIcon(QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "guest", "guest", None)
+        trayicon = TrayIcon(
+            QIcon(BASE_DIR + r'\Image\windowIcon.png'), self.app, "guest", "guest", None)
         trayicon.setVisible(True)
         trayicon.show()
 
@@ -335,9 +345,9 @@ class LoginClass(QDialog, login_form_class):
                 mainWindow.exec()
         except Exception as e:
             # 모든 예외의 에러 메시지를 출력할 때는 Exception을 사용
-            if str(e) ==  '(2003, \"Can\'t connect to MySQL server on \'3.39.9.144\' (timed out)\")':
+            if str(e) == '(2003, \"Can\'t connect to MySQL server on \'3.39.9.144\' (timed out)\")':
                 QMessageBox.setStyleSheet(
-                        self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                    self, 'QMessageBox {color: rgb(120, 120, 120)}')
                 QMessageBox.information(
                     self, 'PIM agent', "원격 네트워크 환경을 확인해주세요.", QMessageBox.Yes)
             elif str(e) == 'tuple index out of range':
@@ -347,7 +357,7 @@ class LoginClass(QDialog, login_form_class):
                     self, 'PIM agent', "입력하신 회원 정보와 일치하는 계정이 없습니다.", QMessageBox.Yes)
             else:
                 QMessageBox.setStyleSheet(
-                        self, 'QMessageBox {color: rgb(120, 120, 120)}')
+                    self, 'QMessageBox {color: rgb(120, 120, 120)}')
                 QMessageBox.information(
                     self, 'PIM agent', "로컬 네트워크 환경을 확인해주세요.", QMessageBox.Yes)
 
@@ -428,7 +438,7 @@ class RunClass(QDialog, run_form_class):
     def setValue(self, nickname, member_setting):
         self.nickname = nickname
         self.member_setting = member_setting
-        
+
         self.titleLabel.setText(nickname + " 님")
 
         if member_setting[0] == 0:
@@ -462,20 +472,25 @@ class RunClass(QDialog, run_form_class):
         sessionCheck = 1 if self.sessionCheckBox.isChecked() is True else 0
 
         try:
-            setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck, self.nickname)
+            setCustomSetting(bookmarkCheck, visitCheck, downloadCheck, autoFormCheck,
+                             cookieCheck, cacheCheck, sessionCheck, self.nickname)
         except pymysql.err.OperationalError:
-            QMessageBox.information(self, 'PIM agent', "요청이 너무 많아 응답이 지연되고 있습니다.\n잠시 후 다시 시도바랍니다.", QMessageBox.Yes)
+            QMessageBox.information(
+                self, 'PIM agent', "요청이 너무 많아 응답이 지연되고 있습니다.\n잠시 후 다시 시도바랍니다.", QMessageBox.Yes)
             pass
 
-        self.member_setting = (bookmarkCheck, visitCheck, downloadCheck, autoFormCheck, cookieCheck, cacheCheck, sessionCheck)
+        self.member_setting = (bookmarkCheck, visitCheck, downloadCheck,
+                               autoFormCheck, cookieCheck, cacheCheck, sessionCheck)
 
-        self.daemonThread.terminate() 
+        self.daemonThread.terminate()
         self.daemonThread = runMemThread()
         self.daemonThread.start()
         self.daemonThread.encrypt_signal.connect(self.logout)
 
-        QMessageBox.setStyleSheet(self, 'QMessageBox {color: rgb(120, 120, 120)}')
-        QMessageBox.information(self, 'PIM agent', "사용자 설정이 완료되었습니다.", QMessageBox.Yes)
+        QMessageBox.setStyleSheet(
+            self, 'QMessageBox {color: rgb(120, 120, 120)}')
+        QMessageBox.information(
+            self, 'PIM agent', "사용자 설정이 완료되었습니다.", QMessageBox.Yes)
 
     def minimize(self):
         self.showMinimized()
@@ -492,11 +507,12 @@ class RunClass(QDialog, run_form_class):
         self.close()
 
         os.system('taskkill /f /im chrome.exe')
-        time.sleep(1)
+        time.sleep(0.5)
 
-        memberFileMove(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting)   
-            
-        encryptThread = EncryptLoadingClass(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting)
+        memberFileMove(getSrcPath(), getDstPath(self.nickname), self.nickname, self.member_setting)
+
+        encryptThread = EncryptLoadingClass(getSrcPath(), getDstPath(
+            self.nickname), self.nickname, self.member_setting)
         encryptThread.exec()
 
         preGuest = LoginClass(self.app)
@@ -609,8 +625,10 @@ class JoinClass(QDialog, join_form_class):
             QMessageBox.information(
                 self, 'PIM agent', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
         else:
-            setMembership(self.idEdit.text(), self.pwdEdit.text(), self.emailEdit.text(), self.nicknameEdit.text())
-            QMessageBox.information(self, 'PIM agent', "회원가입에 성공하였습니다.", QMessageBox.Yes)
+            setMembership(self.idEdit.text(), self.pwdEdit.text(),
+                          self.emailEdit.text(), self.nicknameEdit.text())
+            QMessageBox.information(
+                self, 'PIM agent', "회원가입에 성공하였습니다.", QMessageBox.Yes)
             self.close()
 
             preGuest = LoginClass(self.app)
@@ -684,29 +702,34 @@ class FindClass(QDialog, find_form_class):
             result, resultID = getID(self.findIdFromNicknameEdit.text())
 
             if(result):
-                QMessageBox.information(self, 'PIM agent', "해당 닉네임으로 연결된 ID는 " + resultID[:-3] + "***" + " 입니다.", QMessageBox.Yes)
+                QMessageBox.information(
+                    self, 'PIM agent', "해당 닉네임으로 연결된 ID는 " + resultID[:-3] + "***" + " 입니다.", QMessageBox.Yes)
                 self.close()
 
                 preGuest = LoginClass(self.app)
-                preGuest.exec()  
+                preGuest.exec()
             else:
-                QMessageBox.information(self, 'PIM agent', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
-
+                QMessageBox.information(
+                    self, 'PIM agent', "해당 닉네임으로 연결된 ID는 없습니다.", QMessageBox.Yes)
 
     def resetPWFunc(self):
         QMessageBox.setStyleSheet(
             self, 'QMessageBox {color: rgb(120, 120, 120)}')
         if not(self.findPwFromIDEdit.text() and self.findPwFromNicknameEdit.text()):
-            QMessageBox.information(self, 'PIM agent', "ID나 닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
+            QMessageBox.information(
+                self, 'PIM agent', "ID나 닉네임이 입력되지 않았습니다.", QMessageBox.Yes)
         else:
-            result, resultEmail = getEmail(self.findPwFromIDEdit.text(), self.findPwFromNicknameEdit.text())
+            result, resultEmail = getEmail(
+                self.findPwFromIDEdit.text(), self.findPwFromNicknameEdit.text())
 
             if(result):
                 self.close()
-                validCodeClass = ValidCodeClass(resultEmail, self.findPwFromNicknameEdit.text(), self.app)
+                validCodeClass = ValidCodeClass(
+                    resultEmail, self.findPwFromNicknameEdit.text(), self.app)
                 validCodeClass.exec()
             else:
-                QMessageBox.information(self, 'PIM agent', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
+                QMessageBox.information(
+                    self, 'PIM agent', "해당 ID와 닉네임으로 연결된 PW는 없습니다.", QMessageBox.Yes)
             self.close()
 
     def minimize(self):
@@ -889,6 +912,7 @@ class resetPwClass(QDialog, resetPw_form_class):
         delta = QPoint(event.globalPos() - self.prevPos)
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.prevPos = event.globalPos()
+
 
 stInstance = singleton.SingleInstance()
 

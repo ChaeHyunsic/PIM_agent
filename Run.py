@@ -95,7 +95,6 @@ def trayGuest(flag):
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보 삭제 중...", 1, 1000)
             guestFileRemove(srcPath, 0)
             guestFileRemove(srcPath, 1)
-            time.sleep(2)
             focusThread.terminate()
             QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "개인정보를 삭제했습니다.", 1, 1000)
             keyboard.unhook_all()
