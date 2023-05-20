@@ -116,7 +116,14 @@ def encryptInTrayIcon(srcPath, dstPath, nickname, member_setting):
     focusThread.start()
 
     QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화 진행 중...", 1, 1000)
-    memberFileMove(srcPath, dstPath, nickname, member_setting) # 파일 옮기기
+
+    while(True):
+        try:
+            memberFileMove(srcPath, dstPath, nickname, member_setting) # 파일 옮기기
+            break
+        except:
+            continue
+
     encrypt_all_files(dstPath,nickname)
     QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화가 완료되었습니다.", 1, 1000)
 

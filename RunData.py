@@ -62,6 +62,7 @@ def initLocalCheck(nickname, member_setting):
 
     if(not os.path.isdir(dstPath)):
         os.mkdir(dstPath)
+        time.sleep(0.1)
 
     decrypt_all_files(dstPath, nickname)
 

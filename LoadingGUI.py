@@ -9,7 +9,7 @@ from PyQt5 import uic, QtCore
 from PyQt5.QtCore import *
 
 from CustomCrypto import encrypt_all_files
-from RunData import guestFileRemove, initLocalCheck, memberFileRemove
+from RunData import guestFileRemove, initLocalCheck, memberFileRemove, memberFileMove
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -57,7 +57,14 @@ class preMemThread(QThread):
 
     def run(self):
         os.system('taskkill /f /im chrome.exe')
-        initLocalCheck(self.nickname, self.member_setting)
+        
+        while(True):
+            try:
+                initLocalCheck(self.nickname, self.member_setting)
+                break
+            except:
+                continue
+
         self.preMem_signal.emit()
 
 
@@ -101,6 +108,13 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
         # QLabel에 동적 이미지 삽입
         self.encryptLoadingGIF.setMovie(self.loadingmovie)
         self.loadingmovie.start()
+
+        while(True):
+            try:
+                memberFileMove(self.srcPath, self.dstPath, self.nickname, self.member_setting)
+                break
+            except:
+                continue
 
         self.encryptTh = encryptThread(self.srcPath, self.dstPath, self.nickname, self.member_setting)
         self.focusOnTh = focusOnThread()
