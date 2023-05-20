@@ -62,8 +62,8 @@ def initLocalCheck(nickname, member_setting):
 
     if(not os.path.isdir(dstPath)):
         os.mkdir(dstPath)
-        time.sleep(0.1)
-
+        
+    time.sleep(0.5)
     decrypt_all_files(dstPath, nickname)
 
     # 파일 옮기기
