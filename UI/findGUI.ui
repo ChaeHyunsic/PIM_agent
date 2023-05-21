@@ -294,7 +294,7 @@ background-color:#9E9E9E;
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="findPWBtn">
+   <widget class="QPushButton" name="resPWBtn">
     <property name="geometry">
      <rect>
       <x>246</x>
@@ -524,7 +524,7 @@ background-color:#9E9E9E;
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLineEdit" name="findPwFromIDEdit">
+   <widget class="QLineEdit" name="resPwFromIDEdit">
     <property name="geometry">
      <rect>
       <x>246</x>
@@ -571,7 +571,7 @@ background-color:#9E9E9E;
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLineEdit" name="findPwFromNicknameEdit">
+   <widget class="QLineEdit" name="resPwFromNicknameEdit">
     <property name="geometry">
      <rect>
       <x>246</x>
@@ -856,11 +856,11 @@ background-color:#9E9E9E;
    </widget>
    <zorder>findIDBtn</zorder>
    <zorder>nickNameLabel1</zorder>
-   <zorder>findPWBtn</zorder>
+   <zorder>resPWBtn</zorder>
    <zorder>nickNameLabel2</zorder>
-   <zorder>findPwFromIDEdit</zorder>
+   <zorder>resPwFromIDEdit</zorder>
    <zorder>idLabel</zorder>
-   <zorder>findPwFromNicknameEdit</zorder>
+   <zorder>resPwFromNicknameEdit</zorder>
    <zorder>idtitleLabel</zorder>
    <zorder>pwtitleLabel</zorder>
    <zorder>findIdFromNicknameEdit</zorder>
