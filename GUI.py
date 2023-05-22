@@ -12,7 +12,7 @@ from PyQt5.QtCore import *
 
 from Run import runMem, runGuest, trayGuest, trayMem, sendMail, encryptInTrayIcon
 from RunData import initCheck, getSrcPath, getDstPath
-from DB_setting import getLoginData, checkIDUnique, checkNicknameUnique, setMembership, getID, getEmail, resetPw, setCustomSetting, getCustomSetting
+from DB_setting import getLoginData, checkIDUnique, checkEmailUnique, checkNicknameUnique, setMembership, getID, getEmail, resetPw, setCustomSetting, getCustomSetting
 from LoadingGUI import preGuestClass, preMemClass, EncryptLoadingClass
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))                           # 절대경로 사용을 위한 베이스 경로
@@ -658,6 +658,9 @@ class JoinClass(QDialog, join_form_class):
         elif not checkIDUnique(self.idEdit.text()):                                                 # 이미 존재하는 ID인 경우
             QMessageBox.information(
                 self, 'PIM agent', "입력한 ID가 이미 존재합니다.", QMessageBox.Yes)
+        elif not checkEmailUnique(self.emailEdit.text()):                                                 # 이미 존재하는 ID인 경우
+            QMessageBox.information(
+                self, 'PIM agent', "입력한 이메일이 이미 존재합니다.", QMessageBox.Yes)
         elif not checkNicknameUnique(self.nicknameEdit.text()):                                     # 이미 존재하는 닉네임인 경우
             QMessageBox.information(
                 self, 'PIM agent', "입력한 닉네임이 이미 존재합니다.", QMessageBox.Yes)
