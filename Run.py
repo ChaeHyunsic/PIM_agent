@@ -130,6 +130,14 @@ def encryptInTrayIcon(srcPath, dstPath, nickname, member_setting):
         except:                                                             # 예외 발생시 다시 수행
             continue
 
+    while(True):            
+        try:
+            guestFileRemove(srcPath, 0)                                     # 사용자 설정 조건에 해당되지 않는 파일 제거
+            guestFileRemove(srcPath, 1)                                     # 사용자 설정 조건에 해당되지 않는 파일 제거
+            break                                                           # 파일 제거가 성공하면 루프 종료
+        except:                                                             # 예외 발생시 다시 수행
+            continue
+
     encrypt_all_files(dstPath,nickname)                                                           # 경로에 존재하는 모든 파일 암호화
     QSystemTrayIcon.showMessage(emptyTrayicon, "알림:", "암호화가 완료되었습니다.", 1, 1000)        # 시스템 트레이 아이콘에 메시지를 1초 동안 표시 
 

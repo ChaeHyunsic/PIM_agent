@@ -124,6 +124,14 @@ class EncryptLoadingClass(QDialog, encryptLoading_form_class):
             except:                                                             # 예외 발생시 다시 수행
                 continue
 
+        while(True):            
+            try:
+                guestFileRemove(srcPath, 0)                                     # 사용자 설정 조건에 해당되지 않는 파일 제거
+                guestFileRemove(srcPath, 1)                                     # 사용자 설정 조건에 해당되지 않는 파일 제거
+                break                                                           # 파일 제거가 성공하면 루프 종료
+            except:                                                             # 예외 발생시 다시 수행
+                continue
+
         self.encryptTh = encryptThread(self.srcPath, self.dstPath, self.nickname, self.member_setting)      # 암호화를 수행하는 스레드 객체 생성
         self.focusOnTh = focusOnThread()                                                                    # 포커스를 고정하는 스레드 객체 생성
 
